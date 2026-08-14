@@ -1,8 +1,23 @@
-"""Placeholder: shared DTO / constants.
+"""Shared constants for the ABC Bot paper trader stack.
 
-Reserved for shared constants and data-transfer-object shapes that will
-be derived from the canonical event contract. No business logic exists
-here, and none may be added in this repository.
+Values mirror `docs/contracts/canonical-event-contract.md` (v1.0.0) and
+must stay consistent with that document.
 """
 
-__all__: list[str] = []
+from __future__ import annotations
+
+SCHEMA_VERSION = "1.0.0"
+
+CHECKSUM_PREFIX = "sha256:"
+CHECKSUM_HEX_LENGTH = 64
+
+DEFAULT_COMPONENT = "collector"
+DEFAULT_SEVERITY = "INFO"
+
+__all__ = [
+    "SCHEMA_VERSION",
+    "CHECKSUM_PREFIX",
+    "CHECKSUM_HEX_LENGTH",
+    "DEFAULT_COMPONENT",
+    "DEFAULT_SEVERITY",
+]

@@ -18,6 +18,7 @@ packages = ["collector", "shared"]
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.20",
     "mypy>=1.10",
     "pytest>=8.0",
     "ruff>=0.5",

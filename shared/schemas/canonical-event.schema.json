@@ -1,0 +1,528 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Nathan-Liee/abc-bot-paper-trader/schemas/canonical-event.schema.json",
+  "title": "canonical-event",
+  "description": "Canonical event contract v1.0.0 (docs/contracts/canonical-event-contract.md). Envelope plus one of 17 event payloads. Optional fields are omitted, never null. Extensions are allowed only inside the reserved payload field \"_unknown\".",
+  "type": "object",
+  "properties": {
+    "event_id": { "$ref": "#/$defs/uuid" },
+    "event_type": {
+      "enum": [
+        "TICK_RECEIVED",
+        "TRIGGER_DETECTED",
+        "CONTEXT_BUILT",
+        "AI_REQUEST",
+        "AI_RESPONSE",
+        "RISK_GATE",
+        "ORDER_SUBMITTED",
+        "ORDER_ACKNOWLEDGED",
+        "ORDER_FILLED",
+        "POSITION_OPENED",
+        "POSITION_UPDATED",
+        "NET_PROFIT_POSITIVE",
+        "EXIT_SUBMITTED",
+        "POSITION_CLOSED",
+        "RECONCILIATION",
+        "ERROR",
+        "TIMEOUT"
+      ]
+    },
+    "ts_event": { "$ref": "#/$defs/iso_utc_ts" },
+    "ts_collected": { "$ref": "#/$defs/iso_utc_ts_ms" },
+    "ts_monotonic": { "type": "integer", "minimum": 0 },
+    "component": { "type": "string", "minLength": 1 },
+    "severity": { "enum": ["INFO", "WARN", "ERROR", "CRITICAL"] },
+    "schema_version": { "const": "1.0.0" },
+    "correlation_id": { "$ref": "#/$defs/uuid" },
+    "trade_id": { "$ref": "#/$defs/uuid" },
+    "payload": {
+      "oneOf": [
+        { "$ref": "#/$defs/payload_tick_received" },
+        { "$ref": "#/$defs/payload_trigger_detected" },
+        { "$ref": "#/$defs/payload_context_built" },
+        { "$ref": "#/$defs/payload_ai_request" },
+        { "$ref": "#/$defs/payload_ai_response" },
+        { "$ref": "#/$defs/payload_risk_gate" },
+        { "$ref": "#/$defs/payload_order_submitted" },
+        { "$ref": "#/$defs/payload_order_acknowledged" },
+        { "$ref": "#/$defs/payload_order_filled" },
+        { "$ref": "#/$defs/payload_position_opened" },
+        { "$ref": "#/$defs/payload_position_updated" },
+        { "$ref": "#/$defs/payload_net_profit_positive" },
+        { "$ref": "#/$defs/payload_exit_submitted" },
+        { "$ref": "#/$defs/payload_position_closed" },
+        { "$ref": "#/$defs/payload_reconciliation" },
+        { "$ref": "#/$defs/payload_error" },
+        { "$ref": "#/$defs/payload_timeout" }
+      ]
+    },
+    "checksum": { "$ref": "#/$defs/checksum" }
+  },
+  "required": [
+    "event_id",
+    "event_type",
+    "ts_event",
+    "ts_collected",
+    "ts_monotonic",
+    "component",
+    "severity",
+    "schema_version",
+    "payload",
+    "checksum"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "const": "TICK_RECEIVED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_tick_received" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "TRIGGER_DETECTED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_trigger_detected" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "CONTEXT_BUILT" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_context_built" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "AI_REQUEST" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_ai_request" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "AI_RESPONSE" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_ai_response" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "RISK_GATE" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_risk_gate" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ORDER_SUBMITTED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_order_submitted" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ORDER_ACKNOWLEDGED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_order_acknowledged" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ORDER_FILLED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_order_filled" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "POSITION_OPENED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_position_opened" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "POSITION_UPDATED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_position_updated" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "NET_PROFIT_POSITIVE" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_net_profit_positive" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "EXIT_SUBMITTED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_exit_submitted" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "POSITION_CLOSED" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_position_closed" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "RECONCILIATION" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_reconciliation" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ERROR" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_error" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "TIMEOUT" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/payload_timeout" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "TRIGGER_DETECTED" } } },
+      "then": { "required": ["correlation_id"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": [
+              "TRIGGER_DETECTED",
+              "CONTEXT_BUILT",
+              "AI_REQUEST",
+              "AI_RESPONSE",
+              "RISK_GATE",
+              "ORDER_SUBMITTED",
+              "ORDER_ACKNOWLEDGED",
+              "ORDER_FILLED",
+              "POSITION_OPENED",
+              "POSITION_UPDATED",
+              "NET_PROFIT_POSITIVE",
+              "EXIT_SUBMITTED",
+              "POSITION_CLOSED"
+            ]
+          }
+        }
+      },
+      "then": { "required": ["trade_id"] }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "iso_utc_ts": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$"
+    },
+    "iso_utc_ts_ms": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "broker_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^\\x00-\\x1f\\x7f]*$"
+    },
+    "number": { "type": "number" },
+    "optional_unknown": { "type": "object" },
+
+    "payload_tick_received": {
+      "type": "object",
+      "properties": {
+        "symbol": { "type": "string", "minLength": 1 },
+        "bid": { "$ref": "#/$defs/number" },
+        "ask": { "$ref": "#/$defs/number" },
+        "mid": { "$ref": "#/$defs/number" },
+        "spread": { "$ref": "#/$defs/number" },
+        "ts_source": { "$ref": "#/$defs/iso_utc_ts" },
+        "tick_volume": { "type": "integer" },
+        "tick_id": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["symbol", "bid", "ask", "mid", "spread", "ts_source"],
+      "additionalProperties": false
+    },
+
+    "payload_trigger_detected": {
+      "type": "object",
+      "properties": {
+        "trigger_source": { "enum": ["TECHNICAL", "MARKET_EVENT", "SAFETY_FILTER", "HYBRID"] },
+        "trigger_category": { "type": "string", "minLength": 1 },
+        "trigger_metadata": { "type": "object" },
+        "context_reference": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["trigger_source", "trigger_category", "trigger_metadata", "context_reference"],
+      "additionalProperties": false
+    },
+
+    "payload_context_built": {
+      "type": "object",
+      "properties": {
+        "symbol": { "type": "string", "minLength": 1 },
+        "m1_context_ref": { "type": "string", "minLength": 1 },
+        "m5_context_ref": { "type": "string", "minLength": 1 },
+        "atr_m1": { "$ref": "#/$defs/number" },
+        "context_snapshot_id": { "type": "string", "minLength": 1 },
+        "atr_m5": { "$ref": "#/$defs/number" },
+        "derived_features": { "type": "object" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["symbol", "m1_context_ref", "m5_context_ref", "atr_m1", "context_snapshot_id"],
+      "additionalProperties": false
+    },
+
+    "payload_ai_request": {
+      "type": "object",
+      "properties": {
+        "inference_id": { "$ref": "#/$defs/uuid" },
+        "request_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "context_snapshot_id": { "type": "string", "minLength": 1 },
+        "model_ref": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["inference_id", "request_ts", "context_snapshot_id"],
+      "additionalProperties": false
+    },
+
+    "payload_ai_response": {
+      "type": "object",
+      "properties": {
+        "inference_id": { "$ref": "#/$defs/uuid" },
+        "decision": { "enum": ["BUY", "SELL", "NO-TRADE"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "latency_ms": { "type": "number", "minimum": 0 },
+        "valid": { "type": "boolean" },
+        "error": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["inference_id", "decision", "confidence", "reason", "latency_ms", "valid"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "valid": { "const": false } } },
+          "then": { "required": ["error"] }
+        },
+        {
+          "if": { "properties": { "valid": { "const": true } } },
+          "then": { "not": { "required": ["error"] } }
+        }
+      ]
+    },
+
+    "payload_risk_gate": {
+      "type": "object",
+      "properties": {
+        "gate_result": { "enum": ["ALLOW", "REJECT"] },
+        "risk_budget_usd": { "$ref": "#/$defs/number" },
+        "candidate_lot": { "$ref": "#/$defs/number" },
+        "final_lot": { "$ref": "#/$defs/number" },
+        "aggregate_risk_usd": { "$ref": "#/$defs/number" },
+        "aggregate_exposure_usd": { "$ref": "#/$defs/number" },
+        "free_margin_usd": { "$ref": "#/$defs/number" },
+        "rejection_reason": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": [
+        "gate_result",
+        "risk_budget_usd",
+        "candidate_lot",
+        "final_lot",
+        "aggregate_risk_usd",
+        "aggregate_exposure_usd",
+        "free_margin_usd"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "gate_result": { "const": "REJECT" } } },
+          "then": { "required": ["rejection_reason"] }
+        },
+        {
+          "if": { "properties": { "gate_result": { "const": "ALLOW" } } },
+          "then": { "not": { "required": ["rejection_reason"] } }
+        }
+      ]
+    },
+
+    "payload_order_submitted": {
+      "type": "object",
+      "properties": {
+        "requested_price": { "$ref": "#/$defs/number" },
+        "requested_volume": { "$ref": "#/$defs/number" },
+        "direction": { "type": "string", "minLength": 1 },
+        "order_type": { "type": "string", "minLength": 1 },
+        "submission_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["requested_price", "requested_volume", "direction", "order_type", "submission_ts"],
+      "additionalProperties": false
+    },
+
+    "payload_order_acknowledged": {
+      "type": "object",
+      "properties": {
+        "broker_order_id": { "$ref": "#/$defs/broker_id" },
+        "broker_state": { "type": "string", "minLength": 1 },
+        "ack_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["broker_order_id", "broker_state", "ack_ts"],
+      "additionalProperties": false
+    },
+
+    "payload_order_filled": {
+      "type": "object",
+      "properties": {
+        "broker_order_id": { "$ref": "#/$defs/broker_id" },
+        "broker_deal_id": { "$ref": "#/$defs/broker_id" },
+        "fill_price": { "$ref": "#/$defs/number" },
+        "fill_volume": { "$ref": "#/$defs/number" },
+        "slippage": { "$ref": "#/$defs/number" },
+        "fill_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["broker_order_id", "broker_deal_id", "fill_price", "fill_volume", "slippage", "fill_ts"],
+      "additionalProperties": false
+    },
+
+    "payload_position_opened": {
+      "type": "object",
+      "properties": {
+        "broker_position_id": { "$ref": "#/$defs/broker_id" },
+        "direction": { "type": "string", "minLength": 1 },
+        "volume": { "$ref": "#/$defs/number" },
+        "open_price": { "$ref": "#/$defs/number" },
+        "open_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "state": { "const": "OPEN" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["broker_position_id", "direction", "volume", "open_price", "open_ts", "state"],
+      "additionalProperties": false
+    },
+
+    "payload_position_updated": {
+      "type": "object",
+      "properties": {
+        "broker_position_id": { "$ref": "#/$defs/broker_id" },
+        "current_price": { "$ref": "#/$defs/number" },
+        "running_pnl_usd": { "$ref": "#/$defs/number" },
+        "running_net_pnl_usd": { "$ref": "#/$defs/number" },
+        "mfe_usd": { "$ref": "#/$defs/number" },
+        "mae_usd": { "$ref": "#/$defs/number" },
+        "spread_current": { "$ref": "#/$defs/number" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": [
+        "broker_position_id",
+        "current_price",
+        "running_pnl_usd",
+        "running_net_pnl_usd",
+        "mfe_usd",
+        "mae_usd",
+        "spread_current"
+      ],
+      "additionalProperties": false
+    },
+
+    "payload_net_profit_positive": {
+      "type": "object",
+      "properties": {
+        "broker_position_id": { "$ref": "#/$defs/broker_id" },
+        "trade_id": { "$ref": "#/$defs/uuid" },
+        "running_net_pnl_usd": { "type": "number", "exclusiveMinimum": 0 },
+        "detection_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "observed_bid": { "$ref": "#/$defs/number" },
+        "observed_ask": { "$ref": "#/$defs/number" },
+        "spread_at_detection": { "$ref": "#/$defs/number" },
+        "reason": { "const": "NET_PROFIT_THRESHOLD_CROSSED" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": [
+        "broker_position_id",
+        "trade_id",
+        "running_net_pnl_usd",
+        "detection_ts",
+        "observed_bid",
+        "observed_ask",
+        "spread_at_detection",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "payload_exit_submitted": {
+      "type": "object",
+      "properties": {
+        "broker_position_id": { "$ref": "#/$defs/broker_id" },
+        "requested_close_price": { "$ref": "#/$defs/number" },
+        "close_volume": { "$ref": "#/$defs/number" },
+        "submission_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["broker_position_id", "requested_close_price", "close_volume", "submission_ts"],
+      "additionalProperties": false
+    },
+
+    "payload_position_closed": {
+      "type": "object",
+      "properties": {
+        "broker_position_id": { "$ref": "#/$defs/broker_id" },
+        "exit_fill_price": { "$ref": "#/$defs/number" },
+        "exit_fill_volume": { "$ref": "#/$defs/number" },
+        "exit_fill_ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "realized_pnl_usd": { "$ref": "#/$defs/number" },
+        "transaction_cost_usd": { "$ref": "#/$defs/number" },
+        "net_pnl_usd": { "$ref": "#/$defs/number" },
+        "exit_reason": { "type": "string", "minLength": 1 },
+        "final_state": { "const": "CLOSED" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": [
+        "broker_position_id",
+        "exit_fill_price",
+        "exit_fill_volume",
+        "exit_fill_ts",
+        "realized_pnl_usd",
+        "transaction_cost_usd",
+        "net_pnl_usd",
+        "exit_reason",
+        "final_state"
+      ],
+      "additionalProperties": false
+    },
+
+    "payload_reconciliation": {
+      "type": "object",
+      "properties": {
+        "reconciliation_id": { "$ref": "#/$defs/uuid" },
+        "trigger": { "enum": ["STARTUP", "POST_EXECUTION", "HEARTBEAT", "MISMATCH"] },
+        "local_state": { "type": "string", "minLength": 1 },
+        "broker_state": { "type": "string", "minLength": 1 },
+        "mismatch": { "type": "boolean" },
+        "result": { "enum": ["SYNCED", "ADOPTED_BROKER", "ESCALATED"] },
+        "action": { "type": "string", "minLength": 1 },
+        "ts": { "$ref": "#/$defs/iso_utc_ts" },
+        "mismatch_details": { "type": "object" },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": [
+        "reconciliation_id",
+        "trigger",
+        "local_state",
+        "broker_state",
+        "mismatch",
+        "result",
+        "action",
+        "ts"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "mismatch": { "const": false } } },
+          "then": { "not": { "required": ["mismatch_details"] } }
+        }
+      ]
+    },
+
+    "payload_error": {
+      "type": "object",
+      "properties": {
+        "error_code": { "type": "string", "minLength": 1 },
+        "component": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["INFO", "WARN", "ERROR", "CRITICAL"] },
+        "message": { "type": "string", "minLength": 1 },
+        "trade_id": { "$ref": "#/$defs/uuid" },
+        "recovery_action": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["error_code", "component", "severity", "message"],
+      "additionalProperties": false
+    },
+
+    "payload_timeout": {
+      "type": "object",
+      "properties": {
+        "timeout_code": { "type": "string", "minLength": 1 },
+        "component": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["INFO", "WARN", "ERROR", "CRITICAL"] },
+        "message": { "type": "string", "minLength": 1 },
+        "trade_id": { "$ref": "#/$defs/uuid" },
+        "recovery_action": { "type": "string", "minLength": 1 },
+        "_unknown": { "$ref": "#/$defs/optional_unknown" }
+      },
+      "required": ["timeout_code", "component", "severity", "message"],
+      "additionalProperties": false
+    }
+  }
+}
