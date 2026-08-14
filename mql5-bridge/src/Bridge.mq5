@@ -49,7 +49,6 @@ string OrderStateName(const long state)
       case ORDER_STATE_REQUEST_ADD:     return "REQUEST_ADD";
       case ORDER_STATE_REQUEST_MODIFY:  return "REQUEST_MODIFY";
       case ORDER_STATE_REQUEST_CANCEL:  return "REQUEST_CANCEL";
-      case ORDER_STATE_REQUEST_DELETE:  return "REQUEST_DELETE";
       default:                          return "UNKNOWN";
    }
 }
@@ -272,8 +271,10 @@ void OnTimer()
                                ? SymbolInfoDouble(InpSymbol, SYMBOL_BID)
                                : SymbolInfoDouble(InpSymbol, SYMBOL_ASK);
          double runningPnl = PositionGetDouble(POSITION_PROFIT);
-         double runningNet = runningPnl + PositionGetDouble(POSITION_COMMISSION)
-                             + PositionGetDouble(POSITION_SWAP);
+         // POSITION_COMMISSION is deprecated in current MQL5 builds; the
+         // bridge approximates net with profit + swap and leaves the
+         // commission to the collector (normalization authority).
+         double runningNet = runningPnl + PositionGetDouble(POSITION_SWAP);
          double spread = SymbolInfoDouble(InpSymbol, SYMBOL_ASK)
                          - SymbolInfoDouble(InpSymbol, SYMBOL_BID);
          EmitLine(E_BuildPositionUpdatedLine(InpSymbol, posId, direction, currentPrice,

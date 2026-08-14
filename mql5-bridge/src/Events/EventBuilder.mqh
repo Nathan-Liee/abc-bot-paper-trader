@@ -30,13 +30,13 @@
 //                    The bridge never fabricates sub-second precision it does not have.
 //   No envelope fields (event_id/checksum/...) - collector fills them.
 
-string E_JsonEscape(const string input)
+string E_JsonEscape(const string text)
 {
    string out = "";
-   int len = StringLen(input);
+   int len = StringLen(text);
    for(int i = 0; i < len; i++)
    {
-      ushort code = StringGetCharacter(input, i);
+      ushort code = StringGetCharacter(text, i);
       if(code == '"')
          out += "\\\"";
       else if(code == '\\')

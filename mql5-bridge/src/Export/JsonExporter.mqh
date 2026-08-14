@@ -61,9 +61,9 @@ public:
          if(!ReopenAfterFailure())
             return false;
       }
-      int written = FileWriteString(m_handle, line + "\n");
+      uint written = FileWriteString(m_handle, line + "\n");
       int err = GetLastError();
-      if(written <= 0 || err != 0)
+      if(written == 0 || err != 0)
       {
          m_errorCount++;
          m_reopenAttempts = 0;
@@ -134,7 +134,7 @@ private:
       if(!m_corruptFileRenamed)
       {
          string backup = m_path + ".corrupted." + string(TimeCurrent());
-         if(FileMove(m_path, backup, 0))
+         if(FileMove(m_path, 0, backup, 0))
          {
             m_corruptFileRenamed = true;
             m_reopenAttempts = 0;

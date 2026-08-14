@@ -178,6 +178,10 @@ such as `OrderSend`, `OrderModify`, `OrderDelete`, `MqlTradeRequest`,
 * `mfe_usd` / `mae_usd` in `POSITION_UPDATED` are emitted as `0.0`
   (bridge lacks trade-level extremum history); the collector owns
   trade-level state.
+* `running_net_pnl_usd` in `POSITION_UPDATED` = floating profit + swap;
+  floating commission is excluded because `POSITION_COMMISSION` is
+  deprecated in current MQL5 builds (collector is the normalization
+  authority).
 * `slippage` in `ORDER_FILLED` is an approximation from the current
   market at callback time (no broker request price for market orders).
 * `exit_reason` in `POSITION_CLOSED` is the deal comment verbatim, or
