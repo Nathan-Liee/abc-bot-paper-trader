@@ -253,6 +253,7 @@ data/events/**/*.jsonl
 data/analytics/**/*.csv
 data/analytics/**/*.json
 data/raw/**
+data/validation/**
 
 # Logs (runtime)
 logs/

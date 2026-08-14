@@ -161,6 +161,7 @@ class IngestionPipeline:
         except InvalidLineError as exc:
             c.parse_errors += 1
             c.events_invalid += 1
+            c.malformed_line_count += 1
             logger.warning("ingestion: %s at offset %d", exc, line.start_offset)
             self._advance(line)
             return

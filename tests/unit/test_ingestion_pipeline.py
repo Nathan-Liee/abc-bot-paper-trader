@@ -119,6 +119,7 @@ def test_malformed_line_is_counted_and_skipped(tmp_path: Path) -> None:
     stats = pipeline.process_once()
     repo.close()
     assert stats.parse_errors == 1
+    assert stats.malformed_line_count == 1
     assert stats.events_invalid == 1
     assert stats.events_valid == 1
     assert stats.lines_read == 2
