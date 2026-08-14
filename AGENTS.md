@@ -1,332 +1,261 @@
-# ABC Bot Paper Trader — Persistent Agent Context
-
-Persistent context for all coding agents working on the ABC Bot project.
-
----
+# ABC Bot — Agent Context & Live Project State
 
 ## 1. Project Identity
 
-- **Project:** ABC Bot
-- **Repository:** `abc-bot-paper-trader`
-- This repository is dedicated **paper-trading validation infrastructure**.
-- This is **NOT** the final live trading engine repository.
+| Field | Value |
+|---|---|
+| Project name | ABC Bot (Paper Trader) |
+| Repository | `abc-bot-paper-trader` (`https://github.com/Nathan-Liee/abc-bot-paper-trader`) |
+| Repository purpose | Paper-trading validation infrastructure: telemetry → persistence → reconciliation → measurement. NOT the live trading engine. |
+| Target broker | HFM |
+| Target instrument | XAUUSDc |
+| Target account | HFM Cent |
+| Platform | MetaTrader 5 |
 
-## 2. Current Objective
+## 2. Mission
 
-```
-HFM MT5
-→ MQL5 Read-Only Bridge
-→ JSONL
-→ Python Collector
-→ Canonical Event Model
-→ SQLite WAL
-→ Analytics
-```
+This repository exists to collect **empirical evidence** and validate infrastructure before any final decision on:
 
-The end goal is to collect **empirical evidence** before any final decision on:
-
+- AI model/provider
+- risk %
 - lot sizing
 - adverse move basis
 - spread filter
 - slippage threshold
 - latency budget
 - position behavior
-- AI model/provider
+- execution/exit rules
 
-## 3. Current Implementation Status
+Pipeline being proven:
 
-```
-Repository Bootstrap                 ✅
-Canonical Event Contract             ✅
-Event Model + JSON Schema            ✅
-SQLite WAL Persistence               ✅
-MQL5 Read-Only Bridge                ✅
-MQL5 Compile                         ✅
-MQL5 Runtime Technical Validation   ✅
-JSONL Export                         ✅
-JSONL Ingestion Adapter              🔄 CURRENT
-Reconciliation                       ⏳
-Phase A Data Collection              ⏳
-Paper Trading ≥200 trades            ⏳
-Empirical Analysis                   ⏳
-Risk/Lot Finalization                ⏳
-AI Benchmark                         ⏳
-AI Integration                       ⏳
-Live Trading                         ❌ FORBIDDEN
+```text
+MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQLite WAL → Reconciliation → Analytics
 ```
 
-Notes:
+**This repository is NOT a live trading engine.** It must never acquire order-submission capability. Live trading lives in a future, separate repository (explicitly authorized by a later task only).
 
-- The MQL5 Bridge has been technically validated using **HFM Demo Premium
-  `XAUUSD`** as a harness.
-- The target ABC Bot strategy remains:
+## 3. Current Project Phase
 
 ```
-HFM Cent
-XAUUSDc
+CURRENT PHASE:    Phase A — Data Collection (infrastructure validated 2026-08-14)
+CURRENT MILESTONE: Phase A Data Collection
 ```
 
-- Do **not** change the `XAUUSDc` target just because the technical harness
-  uses `XAUUSD`.
+Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). No blocker. Next actionable milestone: Phase A Data Collection on HFM Cent `XAUUSDc`.
 
-## 4. Current Task
+## 4. Live Implementation Status
+
+Evidence = commit / passing test / compiled artifact / runtime validation / generated data / verified integration / explicit report. Never mark COMPLETE on source-file presence alone.
+
+| Phase / Milestone | Status | Evidence | Last Commit |
+|---|---|---|---|
+| Repository Bootstrap | ✅ COMPLETE | repo structure, README, AGENTS.md, CI config | `172f6d2` |
+| Canonical Event Contract | ✅ COMPLETE | `docs/contracts/canonical-event-contract.md` + validation report | `172f6d2` |
+| Event Model + JSON Schema | ✅ COMPLETE | `collector/event_model/` + `shared/schemas/canonical-event.schema.json`; schema-validated by test suite | `c47d2d5` |
+| SQLite WAL Persistence | ✅ COMPLETE | `collector/persistence/` (migrations 1–3, WAL, integrity, append-only triggers); E2E checks | `36228cb` |
+| MQL5 Read-Only Bridge | ✅ COMPLETE | `mql5-bridge/src/`; static safety test blocks execution tokens; compile 0 errors | `0a4fad4` |
+| MQL5 Compile | ✅ COMPLETE | `mql5-bridge/compile.log`: `Result: 0 errors, 0 warnings, 2975 ms, X64 Regular` | `0a4fad4` |
+| MQL5 Runtime Validation | ✅ COMPLETE (harness) | documented run on HFM Demo Premium `XAUUSD` (TECHNICAL_HARNESS_ONLY; artifacts not committed; re-observation pending) | `0a4fad4` |
+| JSONL Export | ✅ COMPLETE | `JsonExporter.mqh` (append-only, rename-on-corruption) + exporter directory tests | `dba744c` |
+| JSONL Ingestion Adapter | ✅ COMPLETE | `collector/adapters/` (reader/normalize/pipeline/replay); tests + E2E replay 31/31 | `c47d2d5` |
+| Reconciliation | ✅ COMPLETE | `collector/reconciliation/`; 4 triggers, idempotent, non-executive (runtime-verified) | `36228cb` |
+| Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
+| Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
+| AI Model Benchmark | ⏳ PENDING | preliminary requirements in validation report only | — |
+| AI Selection | ⏳ PENDING | — | — |
+| Market Context Engine | ⏳ PENDING | — | — |
+| Trigger Engine | ⏳ PENDING | — | — |
+| AI Decision Engine | ⏳ PENDING | — | — |
+| Risk Engine | ⏳ PENDING | — | — |
+| Lot Sizing | ⏳ PENDING | — | — |
+| Exposure Engine | ⏳ PENDING | — | — |
+| Execution Engine | ⏳ PENDING | — | — |
+| Exit Engine | ⏳ PENDING | — | — |
+| Paper Trading | ⏳ PENDING | — | — |
+| ≥200 Strategy Trades | ⏳ PENDING | — | — |
+| Empirical Analysis | ⏳ PENDING | — | — |
+| Risk/Lot Finalization | ⏳ PENDING | — | — |
+| AI Integration | ⏳ PENDING | — | — |
+| Live Trading | ❌ FORBIDDEN | never in this repository | — |
+
+## 5. Current Work
 
 ```
-CURRENT TASK:
-Collector JSONL Ingestion Adapter
+CURRENT TASK:   Start Phase A Data Collection (NOT STARTED — next actionable)
+OBJECTIVE:      Attach MQL5 bridge to HFM Cent XAUUSDc, run collector tailer
+                + reconciliation heartbeats, begin ≥200-trade paper-trading
+                evidence accumulation.
+SCOPE:          Bridge attach & config (XAUUSDc), JSONL growth, collector
+                ingestion, cursor recovery, reconciliation STARTUP/HEARTBEAT,
+                data-quality monitoring (bid/ask/mid/spread, spread economics
+                measured but NOT used for decisions).
+DO NOT START:   AI benchmark/selection, Market Context, Trigger, AI Decision,
+                Risk, Lot, Exposure, Execution, Exit, Compounding, any
+                strategy paper trading, any order submission.
 ```
 
-Flow:
+## 6. Completed Work
 
-```
-MQL5 JSONL
-→ File Reader
-→ Parse
-→ Normalize
-→ Collector-owned Enrichment
-→ Canonical Event Builder
-→ Schema Validation
-→ Checksum
-→ SQLite Persistence
-→ Cursor
-```
+1. **Repository Bootstrap** — structure, README, governance. Commit `b428f33`/`172f6d2`. Validated: repo builds, tests run.
+2. **Canonical Event Contract v1.0.0** — 17 locked event types, envelope, lifecycle, checksum rule (`sha256:` of canonical serialization). Commit `172f6d2`. Validated: contract + validation report reviewed; schema tests pass.
+3. **Event Model + JSON Schema** — typed envelopes, ids, timestamps (no fabricated precision), lifecycle FSM. Commit `d3a1f30`/`c47d2d5`. Validated: schema validation + roundtrip tests.
+4. **SQLite WAL Persistence** — migrations 1–3, WAL, FK, append-only triggers, integrity suite, duplicate/checksum-conflict guards. Commit `c47d2d5`/`36228cb`. Validated: E2E integrity aggregate PASS.
+5. **MQL5 Read-Only Bridge** — telemetry-only EA; no order API; heartbeat/snapshot/transaction telemetry. Commit `0a4fad4`(+fixes `6dbf5ce`, `dba744c`). Validated: compile log 0 errors; `tests/mql5/test_bridge_safety.py` blocks execution tokens.
+6. **MQL5 Runtime Validation (harness)** — run on HFM Demo Premium `XAUUSD`. Validated: documented in AGENTS.md history; TECHNICAL_HARNESS_ONLY; artifacts not committed.
+7. **JSONL Ingestion Adapter** — tail-reader (cursor, partial-line hold, rotation), normalize, canonicalize, schema-validate, checksum, atomic persist. Commit `d3a1f30`/`c47d2d5`. Validated: unit + replay tests; E2E replay of committed fixtures 31/31 checks PASS.
+8. **Reconciliation Service** — OBSERVE→COMPARE→CLASSIFY→RECORD→ESCALATE/ADOPT only; STARTUP/HEARTBEAT/POST_EXECUTION/MISMATCH; deterministic uuid5 ids; no execution. Commit `36228cb`. Validated: E2E (SYNCED / ADOPTED_BROKER / ESCALATED, idempotent skip, orders/positions untouched).
+9. **Phase A Data-Only Validation** — full pipeline audit + fixes (malformed-line metric). Commits `856c527`, `44d090f`. Validated: 339 tests passed, ruff/mypy clean, verdict **PASS WITH WARNINGS**.
 
-Agents must **not** jump ahead to:
+## 7. Pending Work (dependency order)
 
-- Reconciliation
-- AI
-- Risk
-- Lot sizing
-- Execution
-- Exit
-- Paper trading
+1. **Phase A Data Collection** ← NEXT ACTIONABLE (requires: live HFM Cent `XAUUSDc` terminal; bridge attach; collector tailer; reconciliation heartbeat)
+2. Paper Trading ≥200 trades (needs collection running)
+3. Empirical Analysis (needs ≥200 trades)
+4. AI Model Benchmark (preliminary requirements exist; final needs analysis)
+5. AI Selection
+6. Risk/Lot Finalization (needs analysis)
+7. AI Integration → Market Context → Trigger → AI Decision → Risk → Lot/Exposure → Execution → Exit (needs AI selection + finalized risk/lot)
+8. Live Trading — FORBIDDEN in this repository
 
-...before the current task is finished and validated.
+## 8. Blockers & Warnings
 
-## 5. Architecture Rules
+Blockers: `None`
 
-```
-HFM MT5
-    ↓
+| Item | Status | Impact | Resolution |
+|---|---|---|---|
+| Live MT5 attach not re-observed by validation audit | WARNING | bridge live-runtime evidence is documented harness + static tests only | re-verify during Phase A Data Collection |
+| No HFM Cent `XAUUSDc` runtime data yet | WARNING | all spread/slippage/lot/margin economics unmeasured | collect during Phase A |
+| Harness (`XAUUSD` Premium) data ≠ Cent economics | WARNING | must never drive Cent decisions | keep TECHNICAL_HARNESS_ONLY tagging |
+| `mfe_usd`/`mae_usd` raw 0.0 from bridge | WARNING | trade-level extremum must come from collector | collector owns trade state (by design) |
+| `events_invalid` includes identity-pending trade lines | WARNING | metric readers may misread | read `events_identity_pending` |
+| `POSITION_COMMISSION` deprecated → floating commission excluded | WARNING | `running_net_pnl_usd` approximation | collector normalization authority (by design) |
+| `export_events_jsonl` loads all events in memory | WARNING | large DB risk at analytics phase | revisit before analytics |
+| MCP servers (Thinking/Context7/Affine) not configured on dev profile | WARNING | agent tooling gap, not repo defect | configure if needed |
+
+## 9. Environment Status
+
+| Environment | Broker | Account | Symbol | Status | Use |
+|---|---|---|---|---|---|
+| Target | HFM | Cent | XAUUSDc | NOT YET COLLECTED | all final decisions (risk, lot, spread, feasibility) |
+| Technical harness | HFM | Demo Premium | XAUUSD | validated (runtime documented) | pipeline correctness ONLY |
+
+**Rule:** Premium/XAUUSD evidence is `TECHNICAL_HARNESS_ONLY`. It may never be used for risk calibration, lot sizing, margin model, spread economics final, strategy feasibility, profitability, or any Cent-account decision. Do not change the `XAUUSDc` target because the harness uses `XAUUSD`.
+
+## 10. Architecture
+
+Implemented (actual):
+
+```text
+MT5
+   ↓
 MQL5 Read-Only Bridge
-    ↓
-Local JSONL
-    ↓
-Python Collector
-    ↓
+   ↓
+JSONL
+   ↓
+Collector Ingestion
+   ↓
 Canonical Event Model
-    ↓
+   ↓
 SQLite WAL
-    ↓
+   ↓
+Reconciliation
+   ↓
 Analytics
 ```
 
-Separation of concerns:
+Future (NOT implemented — do not build before its milestone):
 
-- **MQL5** = read-only telemetry producer
-- **Python** = normalization / collector / persistence
-- **Risk** = System-owned
-- **Lot** = System-owned
-- **Execution** = System-owned
-- **Exit** = System-owned
-- **AI** = Entry Proposal only
+```text
+Market Context
+   ↓
+Trigger
+   ↓
+AI Decision
+   ↓
+Risk
+   ↓
+Lot / Exposure
+   ↓
+Execution
+   ↓
+NET_PROFIT Exit
+```
 
-## 6. AI Authority Boundary
+## 11. Authority Boundaries
 
 AI may only produce:
 
-```
-BUY
-SELL
-NO-TRADE
+```text
+BUY | SELL | NO-TRADE
 confidence
 reason
 ```
 
-AI must **not** control:
+AI must never control: risk, lot, exposure, margin, execution, exit, compounding.
 
-```
-lot
-risk
-exposure
-margin
-execution
-exit
-compounding
-```
+System owns: Risk, Lot, Exposure, Margin, Execution, Exit, Compounding. `NET_PROFIT > 0` is a deterministic system rule and never waits for AI.
 
-`NET_PROFIT > 0` is a **deterministic system rule** and does not wait for AI.
+Boundary is locked. No agent may change it.
 
-## 7. Safety Rules
+## 12. Safety Rules (HARD)
 
-Mandatory:
+- Live trading forbidden — this repository must never acquire order capability.
+- Read-only default: `live_trading_enabled=false`, `read_only_mode=true`.
+- Demo execution disabled unless explicitly authorized by a later separate task.
+- No credentials in repository (`.env` never committed; `.gitignore` enforced).
+- No automatic order execution of any kind.
+- No live-account testing on the Cent target without an explicit task.
+- Do not change safety defaults to make development easier.
 
-```
-live_trading_enabled = false
-read_only_mode = true
-demo execution = disabled by default
-```
+## 13. Coding Agent Rules
 
-This repository must never acquire live trading capability.
-
-Do **not**:
-
-- send live orders
-- send demo orders without an explicit task
-- use live credentials
-- change safety defaults to make development easier
-- execute orders unless explicitly authorized by a later, separate task
-
-## 8. Broker / Instrument
-
-Target:
-
-```
-Broker:        HFM
-Account:       Cent
-Platform:      MT5
-Symbol:        XAUUSDc
-Contract Size: 1 oz/lot
-Min Lot:       0.01
-Lot Step:      0.01
-```
-
-The technical harness may use:
-
-```
-HFM Demo Premium
-XAUUSD
-```
-
-but Premium results must **not** be used to alter the economics/risk model of
-Cent `XAUUSDc`.
-
-## 9. Important Event Contract Rules
-
-- The 17 canonical event types are **locked**.
-- Required fields must not be null.
-- Optional fields are omitted.
-- `TRIGGER_DETECTED` is not `ORDER_SUBMITTED`.
-- Tick events are append-only.
-- Do not dedupe ticks by timestamp alone.
-- Broker IDs must not be fabricated.
-- `ts_monotonic` comes from the collector.
-- Do not fabricate timestamp precision.
-- Checksum uses SHA-256 of the canonical event without the checksum field.
-- Historical audit events are append-only.
-
-## 10. Development Discipline
-
-Coding agents **MUST**:
-
-1. Read `AGENTS.md`.
-2. Read the contract before changing event-related code.
-3. Work only within this repository.
-4. Make the smallest possible change.
-5. Not jump to the next milestone.
-6. Run test / lint / type-check after every change.
-7. Make focused commits.
-8. Not force push.
+1. Read this `AGENTS.md` first.
+2. Read `docs/contracts/canonical-event-contract.md` before changing event-related code.
+3. Respect the current milestone; do not jump ahead (workflow order in §7).
+4. Do not skip dependencies.
+5. Maintain backward compatibility with the locked contract and schema.
+6. Run full validation after every change: `pytest`, `ruff check .`, `ruff format --check .`, `mypy collector shared`.
+7. Make focused commits (conventional style).
+8. Never force push.
 9. Report blockers instead of inventing workarounds.
+10. Source of truth priority: contract docs > `docs/architecture.md` > README > source > tests.
 
-## 11. Source of Truth
+## 14. Milestone Handover Protocol
 
-Authoritative references (in priority order):
+Every time a task completes, the agent MUST update this document:
 
-- `docs/contracts/canonical-event-contract.md` — authoritative event contract
-- `docs/contracts/canonical-event-contract-validation.md` — validation rules
-- `shared/schemas/canonical-event.schema.json` — machine-checkable contract
-- `docs/architecture.md` — system architecture and boundaries
-- `README.md` — repository overview and setup
-- source code — implemented behavior
-- tests — executable behavior specification
+1. Update `AGENTS.md`.
+2. Update `CURRENT PHASE` (§3).
+3. Update `CURRENT MILESTONE` (§3).
+4. Update milestone status table (§4) with evidence.
+5. Update Completed Work (§6) — result + commit + validation status.
+6. Update Pending Work (§7) — next actionable milestone.
+7. Update Blockers & Warnings (§8).
+8. Record validation result.
+9. Record commit hash.
+10. Record next step.
+11. Commit source changes + `AGENTS.md` consistently (same commit or immediately following).
+12. Update the Handoff Snapshot (§15).
 
-`AGENTS.md` is guidance/instructions for coding agents. It is **not** a
-replacement for the authoritative contracts. Do not duplicate full event
-contract contents into this file.
+**`AGENTS.md` is a living document.**
 
-## 12. Required Validation
+- Status must never be stale — it must reflect repository HEAD.
+- Never write "complete" without evidence.
+- Never write "current" without validation.
+- Every milestone completion must update this document.
 
-The baseline project must keep satisfying:
-
-```
-pytest
-ruff check .
-ruff format --check .
-mypy collector shared
-```
-
-Every task must keep existing tests PASSING.
-
-## 13. Workflow
-
-Official order:
+## 15. Handoff Snapshot
 
 ```
-Documentation
-→ Technical Decision
-→ Repository Foundation
-→ Event Contract
-→ Event Model
-→ Persistence
-→ MQL5 Bridge
-→ JSONL Ingestion
-→ Reconciliation
-→ Phase A Data Collection
-→ Paper Trading
-→ Empirical Analysis
-→ Finalize Risk/Lot
-→ AI Benchmark
-→ AI Integration
+LAST VERIFIED:          2026-08-14 21:00 +07:00
+CURRENT PHASE:          Phase A — Data Collection
+CURRENT MILESTONE:      Phase A Data Collection
+LAST COMPLETED MILESTONE: Phase A Data-Only Validation (PASS WITH WARNINGS)
+LATEST COMMIT:          44d090f
+TEST STATUS:            339 passed; ruff check/format clean; mypy clean (48 files)
+BLOCKER:                None
+NEXT ACTION:            Attach MQL5 bridge to HFM Cent XAUUSDc; start collector
+                        tailer; verify first JSONL → SQLite → reconciliation cycle.
 ```
 
-Do not skip stages.
-
-## 14. Hermes vs Coding Agent
-
-```
-Hermes:
-- reasoning
-- research
-- audit
-- alignment
-- documentation
-- technical decision support
-
-Coding Agent:
-- source code
-- implementation
-- tests
-- debugging
-- repository changes
-```
-
-Hermes is **not** a coding agent for this repository.
-
-## 15. Scope Boundary
-
-`abc-bot-paper-trader` focuses on:
-
-- telemetry
-- paper-trading infrastructure
-- event contracts
-- persistence
-- reconciliation
-- measurement
-- analytics
-
-A future trading engine may live in a separate repository.
-
-## 16. Agent Behavior
-
-If a new task conflicts with:
-
-- the canonical contract
-- the authority boundary
-- the safety boundary
-- the current phase
-- the repository scope
-
-...the agent must **STOP** and report the conflict.
-
-Do not change locked decisions based purely on implementation preference.
+Read this block first. Then §3–§8. Then the repo.
