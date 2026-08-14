@@ -2,6 +2,14 @@
 
 Index of repository documentation.
 
+## Repository documentation
+
+- `docs/architecture.md` — system architecture and boundaries
+- `docs/contracts/canonical-event-contract.md` — authoritative event contract
+- `docs/contracts/canonical-event-contract-validation.md` — validation rules
+- `shared/schemas/canonical-event.schema.json` — machine-checkable contract
+- `../AGENTS.md` — persistent context for coding agents
+
 ## Baseline specifications (external references)
 
 Implementation work in this repository must follow:
@@ -10,23 +18,19 @@ Implementation work in this repository must follow:
 2. **Paper-Trading Collector Technical Design** (approved)
 3. **HFM MT5 Paper-Trading Measurement Specification** (approved)
 
-The specifications drive later milestones; bootstrap deliberately
-implemented none of them.
+## Implementation status (remaining milestones)
 
-## Remaining implementation steps (later milestones, not this repo's bootstrap)
-
-1. Define the canonical event contract in `shared/contracts` + final
+1. Canonical event contract in `shared/contracts` +
    `shared/schemas/event.schema.json` — **implemented**.
-2. Implement MQL5 bridge (`mql5-bridge/src`) — read-only observer that
-   emits events to the local IPC / JSONL channel.
-3. Implement collector adapters (`collector/adapters`) reading the
-   channel — **implemented** (JSONL ingestion).
-4. Implement event model + journal (`collector/event_model`,
-   `collector/journal`).
-5. Implement SQLite WAL persistence (`collector/persistence`) — final
-   schema decided by the technical design — **implemented**.
-6. Implement observability hooks (`collector/observability`).
-7. Wire configuration loader (`collector/config`) against the templates.
+2. MQL5 bridge (`mql5-bridge/src`) — read-only observer that emits events
+   to the local IPC / JSONL channel — **implemented**.
+3. Collector adapters (`collector/adapters`) reading the channel —
+   **implemented** (JSONL ingestion).
+4. Event model + journal (`collector/event_model`, `collector/journal`).
+5. SQLite WAL persistence (`collector/persistence`) — final schema decided
+   by the technical design — **implemented**.
+6. Observability hooks (`collector/observability`).
+7. Configuration loader (`collector/config`) against the templates.
 
 ## JSONL ingestion adapter (implemented)
 

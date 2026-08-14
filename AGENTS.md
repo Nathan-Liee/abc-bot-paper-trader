@@ -42,12 +42,15 @@ Event Model + JSON Schema            ✅
 SQLite WAL Persistence               ✅
 MQL5 Read-Only Bridge                ✅
 MQL5 Compile                         ✅
-MQL5 Runtime Technical Validation    ✅
+MQL5 Runtime Technical Validation   ✅
 JSONL Export                         ✅
-JSONL Ingestion Adapter              🔄 CURRENT TASK
+JSONL Ingestion Adapter              🔄 CURRENT
 Reconciliation                       ⏳
 Phase A Data Collection              ⏳
 Paper Trading ≥200 trades            ⏳
+Empirical Analysis                   ⏳
+Risk/Lot Finalization                ⏳
+AI Benchmark                         ⏳
 AI Integration                       ⏳
 Live Trading                         ❌ FORBIDDEN
 ```
@@ -103,16 +106,18 @@ Agents must **not** jump ahead to:
 ## 5. Architecture Rules
 
 ```
-MQL5 Bridge
-     ↓
+HFM MT5
+    ↓
+MQL5 Read-Only Bridge
+    ↓
 Local JSONL
-     ↓
+    ↓
 Python Collector
-     ↓
-Event Model
-     ↓
+    ↓
+Canonical Event Model
+    ↓
 SQLite WAL
-     ↓
+    ↓
 Analytics
 ```
 
@@ -170,6 +175,7 @@ Do **not**:
 - send demo orders without an explicit task
 - use live credentials
 - change safety defaults to make development easier
+- execute orders unless explicitly authorized by a later, separate task
 
 ## 8. Broker / Instrument
 
@@ -223,7 +229,23 @@ Coding agents **MUST**:
 8. Not force push.
 9. Report blockers instead of inventing workarounds.
 
-## 11. Required Validation
+## 11. Source of Truth
+
+Authoritative references (in priority order):
+
+- `docs/contracts/canonical-event-contract.md` — authoritative event contract
+- `docs/contracts/canonical-event-contract-validation.md` — validation rules
+- `shared/schemas/canonical-event.schema.json` — machine-checkable contract
+- `docs/architecture.md` — system architecture and boundaries
+- `README.md` — repository overview and setup
+- source code — implemented behavior
+- tests — executable behavior specification
+
+`AGENTS.md` is guidance/instructions for coding agents. It is **not** a
+replacement for the authoritative contracts. Do not duplicate full event
+contract contents into this file.
+
+## 12. Required Validation
 
 The baseline project must keep satisfying:
 
@@ -236,7 +258,7 @@ mypy collector shared
 
 Every task must keep existing tests PASSING.
 
-## 12. Workflow
+## 13. Workflow
 
 Official order:
 
@@ -260,7 +282,7 @@ Documentation
 
 Do not skip stages.
 
-## 13. Hermes vs Coding Agent
+## 14. Hermes vs Coding Agent
 
 ```
 Hermes:
@@ -281,7 +303,7 @@ Coding Agent:
 
 Hermes is **not** a coding agent for this repository.
 
-## 14. Scope Boundary
+## 15. Scope Boundary
 
 `abc-bot-paper-trader` focuses on:
 
@@ -295,7 +317,7 @@ Hermes is **not** a coding agent for this repository.
 
 A future trading engine may live in a separate repository.
 
-## 15. Agent Behavior
+## 16. Agent Behavior
 
 If a new task conflicts with:
 

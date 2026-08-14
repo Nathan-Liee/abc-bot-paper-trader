@@ -2,22 +2,24 @@
 
 Paper-data-only validation collector for the ABC Bot stack.
 
-This repository is a **bootstrap foundation only**. It contains no trading
-logic, no AI, no risk engine, no execution engine, and no broker integration.
-It is the dedicated **paper-trading / validation collector** and it is kept
+This repository is the dedicated **paper-trading / validation collector**
+for the ABC Bot project. It contains no trading logic, no AI, no risk
+engine, no execution engine, and no live broker integration. It is kept
 **separate from any future ABC Bot engine repository**.
 
 ## Scope
 
 | What this repo does                          | What this repo NEVER does           |
 | -------------------------------------------- | ----------------------------------- |
-| Reserve the collector architecture           | Live trading (forbidden)            |
-| Define safety defaults and config foundation | Demo/live order submission          |
-| Define the shared event contract shape       | Connect to HFM / MT5 / demo account |
-| Define storage (SQLite WAL) layout           | AI, risk, exposure, lot sizing      |
-| Run tests / lint / type-check in CI          | Placeholder business logic          |
+| Paper-trading validation infrastructure      | Live trading (forbidden)            |
+| Safety defaults and config foundation        | Demo/live order submission          |
+| Shared canonical event contract              | Connect to HFM / MT5 trading account|
+| MQL5 read-only telemetry bridge              | AI, risk, exposure, lot sizing      |
+| SQLite WAL storage + analytics exports       | Placeholder business logic          |
+| Run tests / lint / type-check in CI          | Live trading capability             |
 
-At this stage every module is a **placeholder boundary** with no implementation.
+The collector chain (bridge → JSONL → ingestion → persistence) is
+implemented; reconciliation and data collection are later milestones.
 
 ## Architecture (baseline, fixed)
 
@@ -59,13 +61,13 @@ Live-trading capability does not exist anywhere in this repository.
 
 ```text
 abc-bot-paper-trader/
-|-- mql5-bridge/    MQL5 bridge placeholder (source folder, architecture notes)
-|-- collector/      Python collector module boundaries (placeholder)
-|-- shared/         Canonical event contract + JSON schema placeholders
+|-- mql5-bridge/    MQL5 read-only telemetry bridge (source + architecture notes)
+|-- collector/      Python collector: event model, persistence, adapters
+|-- shared/         Canonical event contract + JSON schema
 |-- tests/          unit / integration / replay / failure
-|-- scripts/        Operational helper scripts (planned)
+|-- scripts/        Operational helper scripts
 |-- config/         Configuration templates
-|-- docs/           Documentation foundation
+|-- docs/           Documentation (architecture, contracts, agent context)
 |-- data/           Runtime storage (ignored by git, .gitkeep only)
 |-- .github/        CI workflows (test, lint, type-check)
 +-- pyproject.toml  Python project definition (uv-managed)
@@ -96,6 +98,16 @@ run this repository.
 
 ## Status
 
-Bootstrap only. Live trading is prohibited on this repository, including in
-future commits. Remaining implementation steps are tracked in
-`docs/README.md`.
+Live trading is prohibited on this repository, including in future commits.
+
+Current implementation state and task are tracked in `AGENTS.md` (agent
+context) and `docs/architecture.md` (system architecture). Remaining
+milestones are tracked in `docs/README.md`.
+
+## Authoritative documentation
+
+- `AGENTS.md` — permanent context for coding agents (current task, boundaries)
+- `docs/architecture.md` — system architecture and boundaries
+- `docs/contracts/canonical-event-contract.md` — canonical event contract
+- `docs/contracts/canonical-event-contract-validation.md` — validation rules
+- `shared/schemas/canonical-event.schema.json` — machine-checkable contract
