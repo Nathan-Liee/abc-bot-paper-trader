@@ -1,0 +1,225 @@
+{
+  "dataset_version": "1.0.0",
+  "generated": "2026-08-14T21:10:00+07:00",
+  "purpose": "Synthetic M1/M5 market context for AI Decision Engine benchmark. Facts only - NO profitability ground truth labels.",
+  "symbol": "XAUUSDc",
+  "scenarios": [
+    {
+      "id": "s01",
+      "name": "low_volatility_flat",
+      "tags": ["low_volatility", "spread_normal", "flat"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:00:00+07:00",
+        "bid": 2394.52,
+        "ask": 2394.66,
+        "spread": 0.14,
+        "mid": 2394.59,
+        "atr_m1": 0.11,
+        "atr_m5": 0.28,
+        "m1": {"trend": "flat", "direction": "flat", "momentum": -0.02, "vol_class": "low", "bar_count": 5, "note": "last 5 bars range 0.11"},
+        "m5": {"trend": "flat", "direction": "flat", "momentum": -0.04, "vol_class": "low", "bar_count": 5},
+        "derived": {"volatility_class": "low", "spread_class": "normal", "momentum_bias": "none", "m1m5_alignment": "flat", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s02",
+      "name": "normal_volatility_range",
+      "tags": ["normal_volatility", "spread_normal", "choppy", "range"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:05:00+07:00",
+        "bid": 2398.10,
+        "ask": 2398.27,
+        "spread": 0.17,
+        "mid": 2398.19,
+        "atr_m1": 0.35,
+        "atr_m5": 0.85,
+        "m1": {"trend": "range", "direction": "flat", "momentum": 0.05, "vol_class": "normal", "bar_count": 5, "note": "alternating up/down bars inside 2397.9-2398.5"},
+        "m5": {"trend": "range", "direction": "flat", "momentum": 0.02, "vol_class": "normal", "bar_count": 5},
+        "derived": {"volatility_class": "normal", "spread_class": "normal", "momentum_bias": "none", "m1m5_alignment": "flat", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s03",
+      "name": "high_volatility_news",
+      "tags": ["high_volatility", "spread_widened", "news"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:10:00+07:00",
+        "bid": 2401.30,
+        "ask": 2401.92,
+        "spread": 0.62,
+        "mid": 2401.61,
+        "atr_m1": 1.80,
+        "atr_m5": 4.10,
+        "m1": {"trend": "sharp", "direction": "down", "momentum": -0.85, "vol_class": "high", "bar_count": 5, "note": "5 large bars, fast move, wide b/a gaps"},
+        "m5": {"trend": "sharp", "direction": "down", "momentum": -0.70, "vol_class": "high", "bar_count": 5},
+        "derived": {"volatility_class": "high", "spread_class": "widened", "momentum_bias": "bearish", "m1m5_alignment": "aligned_bearish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s04",
+      "name": "spread_normal",
+      "tags": ["spread_normal", "mild_trend", "bullish"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:15:00+07:00",
+        "bid": 2396.40,
+        "ask": 2396.55,
+        "spread": 0.15,
+        "mid": 2396.48,
+        "atr_m1": 0.30,
+        "atr_m5": 0.70,
+        "m1": {"trend": "up", "direction": "bullish", "momentum": 0.35, "vol_class": "normal", "bar_count": 5, "note": "steady higher lows"},
+        "m5": {"trend": "up", "direction": "bullish", "momentum": 0.22, "vol_class": "normal", "bar_count": 5},
+        "derived": {"volatility_class": "normal", "spread_class": "normal", "momentum_bias": "bullish", "m1m5_alignment": "aligned_bullish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s05",
+      "name": "spread_widened",
+      "tags": ["spread_widened", "low_volatility", "flat"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:20:00+07:00",
+        "bid": 2390.00,
+        "ask": 2390.90,
+        "spread": 0.90,
+        "mid": 2390.45,
+        "atr_m1": 0.12,
+        "atr_m5": 0.30,
+        "m1": {"trend": "flat", "direction": "flat", "momentum": 0.01, "vol_class": "low", "bar_count": 5, "note": "tight range, wide ask-bid gap"},
+        "m5": {"trend": "flat", "direction": "flat", "momentum": -0.02, "vol_class": "low", "bar_count": 5},
+        "derived": {"volatility_class": "low", "spread_class": "widened", "momentum_bias": "none", "m1m5_alignment": "flat", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s06",
+      "name": "bullish_momentum",
+      "tags": ["bullish_momentum", "m1m5_aligned", "high_relative_atr"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:25:00+07:00",
+        "bid": 2405.80,
+        "ask": 2405.98,
+        "spread": 0.18,
+        "mid": 2405.89,
+        "atr_m1": 0.95,
+        "atr_m5": 2.20,
+        "m1": {"trend": "strong_up", "direction": "bullish", "momentum": 0.92, "vol_class": "high", "bar_count": 5, "note": "5 consecutive bullish bars, closes near highs, expanding ATR"},
+        "m5": {"trend": "up", "direction": "bullish", "momentum": 0.60, "vol_class": "high", "bar_count": 5},
+        "derived": {"volatility_class": "high", "spread_class": "normal", "momentum_bias": "bullish", "m1m5_alignment": "aligned_bullish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s07",
+      "name": "bearish_momentum",
+      "tags": ["bearish_momentum", "m1m5_aligned", "high_relative_atr"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:30:00+07:00",
+        "bid": 2388.40,
+        "ask": 2388.57,
+        "spread": 0.17,
+        "mid": 2388.49,
+        "atr_m1": 1.05,
+        "atr_m5": 2.40,
+        "m1": {"trend": "strong_down", "direction": "bearish", "momentum": -0.95, "vol_class": "high", "bar_count": 5, "note": "5 consecutive bearish bars, closes near lows, expanding ATR"},
+        "m5": {"trend": "down", "direction": "bearish", "momentum": -0.65, "vol_class": "high", "bar_count": 5},
+        "derived": {"volatility_class": "high", "spread_class": "normal", "momentum_bias": "bearish", "m1m5_alignment": "aligned_bearish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s08",
+      "name": "m1m5_aligned_bullish",
+      "tags": ["m1m5_aligned", "bullish", "pullback"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:35:00+07:00",
+        "bid": 2399.20,
+        "ask": 2399.36,
+        "spread": 0.16,
+        "mid": 2399.28,
+        "atr_m1": 0.40,
+        "atr_m5": 0.95,
+        "m1": {"trend": "up_pullback", "direction": "bullish", "momentum": 0.25, "vol_class": "normal", "bar_count": 5, "note": "pullback holding above M5 rising structure, buyers active at 2399.0"},
+        "m5": {"trend": "up", "direction": "bullish", "momentum": 0.35, "vol_class": "normal", "bar_count": 5},
+        "derived": {"volatility_class": "normal", "spread_class": "normal", "momentum_bias": "bullish", "m1m5_alignment": "aligned_bullish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s09",
+      "name": "m1m5_aligned_bearish",
+      "tags": ["m1m5_aligned", "bearish", "pullback"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:40:00+07:00",
+        "bid": 2392.60,
+        "ask": 2392.77,
+        "spread": 0.17,
+        "mid": 2392.69,
+        "atr_m1": 0.42,
+        "atr_m5": 1.00,
+        "m1": {"trend": "down_pullback", "direction": "bearish", "momentum": -0.28, "vol_class": "normal", "bar_count": 5, "note": "pullback capped under M5 falling structure, sellers at 2392.8"},
+        "m5": {"trend": "down", "direction": "bearish", "momentum": -0.38, "vol_class": "normal", "bar_count": 5},
+        "derived": {"volatility_class": "normal", "spread_class": "normal", "momentum_bias": "bearish", "m1m5_alignment": "aligned_bearish", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s10",
+      "name": "m1m5_conflicting",
+      "tags": ["m1m5_conflicting", "ambiguous"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:45:00+07:00",
+        "bid": 2397.00,
+        "ask": 2397.18,
+        "spread": 0.18,
+        "mid": 2397.09,
+        "atr_m1": 0.45,
+        "atr_m5": 1.10,
+        "m1": {"trend": "up", "direction": "bullish", "momentum": 0.40, "vol_class": "normal", "bar_count": 5, "note": "M1 rising but sitting under M5 resistance"},
+        "m5": {"trend": "down", "direction": "bearish", "momentum": -0.45, "vol_class": "normal", "bar_count": 5},
+        "derived": {"volatility_class": "normal", "spread_class": "normal", "momentum_bias": "none", "m1m5_alignment": "conflicting", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s11",
+      "name": "ambiguous_no_trade",
+      "tags": ["ambiguous", "no_bias", "spread_widened"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:50:00+07:00",
+        "bid": 2395.10,
+        "ask": 2395.60,
+        "spread": 0.50,
+        "mid": 2395.35,
+        "atr_m1": 0.28,
+        "atr_m5": 0.65,
+        "m1": {"trend": "choppy", "direction": "flat", "momentum": 0.03, "vol_class": "low", "bar_count": 5, "note": "overlapping bars, no directional structure, wide spread"},
+        "m5": {"trend": "choppy", "direction": "flat", "momentum": -0.05, "vol_class": "low", "bar_count": 5},
+        "derived": {"volatility_class": "low", "spread_class": "widened", "momentum_bias": "none", "m1m5_alignment": "flat", "context_sufficiency": "sufficient"}
+      }
+    },
+    {
+      "id": "s12",
+      "name": "insufficient_context",
+      "tags": ["insufficient_context", "missing_data"],
+      "market_context": {
+        "symbol": "XAUUSDc",
+        "ts": "2026-08-14T12:55:00+07:00",
+        "bid": 2393.10,
+        "ask": 2393.24,
+        "spread": 0.14,
+        "mid": 2393.17,
+        "atr_m1": 0.18,
+        "atr_m5": null,
+        "m1": {"trend": "unknown", "direction": "unknown", "momentum": 0.02, "vol_class": "low", "bar_count": 2, "note": "only 2 bars after session open"},
+        "m5": {"trend": "unknown", "direction": "unknown", "momentum": null, "vol_class": "unknown", "bar_count": 0, "note": "no M5 bars yet"},
+        "derived": {"volatility_class": "unknown", "spread_class": "normal", "momentum_bias": "unknown", "m1m5_alignment": "unknown", "context_sufficiency": "insufficient"}
+      }
+    }
+  ],
+  "fail_safe_scenarios": ["s10", "s11", "s12"]
+}
