@@ -240,6 +240,14 @@ data/**/*.db-shm
 data/**/*.sqlite
 data/**/*.sqlite3
 
+# SQLite WAL runtime files (explicit, wherever they land)
+collector.db
+collector.db-wal
+collector.db-shm
+
+# Generated export artifacts (CSV / JSONL)
+data/exports/**
+
 # Generated data artifacts (CSV / JSONL / raw)
 data/events/**/*.jsonl
 data/analytics/**/*.csv
