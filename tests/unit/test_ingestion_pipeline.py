@@ -186,3 +186,36 @@ def test_bridge_events_without_identity_never_reach_repo(tmp_path: Path) -> None
     with repo:
         assert repo.count_events() == 0
     assert stats.events_identity_pending == 1
+
+
+def test_canonical_envelope_fields_generated_and_verified(tmp_path: Path) -> None:
+    line = _raw(
+        "TICK_RECEIVED",
+        {
+            "symbol": "XAUUSDc",
+            "bid": 1.0,
+            "ask": 2.0,
+            "mid": 1.5,
+            "spread": 1.0,
+            "ts_source": TS,
+        },
+    )
+    repo, _, stats = _run(tmp_path, [line])
+    assert stats.events_parsed == 1
+    assert stats.events_valid == 1
+    with repo:
+        events = list(repo.query_events(limit=10))
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_id
+    assert event.ts_collected.endswith("Z")
+    assert isinstance(event.ts_monotonic, int) and event.ts_monotonic > 0
+    assert isinstance(event.schema_version, str) and event.schema_version.count(".") == 2
+    assert event.checksum.startswith("sha256:")
+    assert event.verify_checksum() is True
+    # pre-trade TICK_RECEIVED carries no fabricated identity
+    assert event.trade_id is None
+    assert event.correlation_id is None
+    # normalization preserved symbol and source timestamp verbatim
+    assert event.payload["symbol"] == "XAUUSDc"
+    assert event.payload["ts_source"] == TS

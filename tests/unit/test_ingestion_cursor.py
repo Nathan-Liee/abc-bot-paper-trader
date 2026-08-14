@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from collector.event_model import EventType, build_event
-from collector.persistence import PersistenceRepository
+from collector.event_model import EventEnvelope, EventType, build_event, compute_checksum
+from collector.persistence import PersistenceError, PersistenceRepository
 from collector.persistence.cursor import IngestionCursor
 from tests.unit.event_factories import CORRELATION_ID, TRADE_ID, tick_payload
 
@@ -89,3 +89,30 @@ def test_cursor_update_without_event(repo: PersistenceRepository) -> None:
         assert loaded is not None
         assert loaded.byte_offset == 100
         assert loaded.last_event_id is None
+
+
+def test_persistence_failure_does_not_advance_cursor(repo: PersistenceRepository) -> None:
+    """A failed persist (conflicting duplicate event_id) leaves the
+    cursor untouched: event insert and cursor update share one
+    transaction, so both roll back together."""
+    with repo:
+        event = build_event(EventType.TICK_RECEIVED, tick_payload())
+        repo.insert_event_with_cursor(
+            event, IngestionCursor.of("src", byte_offset=100, last_event_id=event.event_id)
+        )
+
+        conflicting_data = event.to_dict()
+        conflicting_data["payload"] = tick_payload(bid=2500.0, ask=2500.5)
+        conflicting_data["checksum"] = compute_checksum(conflicting_data)
+        conflicting = EventEnvelope.from_dict(conflicting_data)
+        assert conflicting.event_id == event.event_id
+        assert conflicting.checksum != event.checksum
+
+        with pytest.raises(PersistenceError):
+            repo.insert_event_with_cursor(conflicting, IngestionCursor.of("src", byte_offset=200))
+
+        loaded = repo.get_ingestion_cursor("src")
+        assert loaded is not None
+        assert loaded.byte_offset == 100
+        assert loaded.last_event_id == event.event_id
+        assert repo.count_events() == 1

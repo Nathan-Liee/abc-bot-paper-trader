@@ -57,6 +57,7 @@ class IngestionStats:
     """Observability counters for one pipeline run (task section 17)."""
 
     lines_read: int = 0
+    events_parsed: int = 0
     events_valid: int = 0
     events_persisted: int = 0
     events_invalid: int = 0
@@ -76,6 +77,7 @@ class IngestionStats:
 @dataclass
 class _MutableCounters:
     lines_read: int = 0
+    events_parsed: int = 0
     events_valid: int = 0
     events_persisted: int = 0
     events_invalid: int = 0
@@ -162,6 +164,7 @@ class IngestionPipeline:
             logger.warning("ingestion: %s at offset %d", exc, line.start_offset)
             self._advance(line)
             return
+        c.events_parsed += 1
 
         if normalized.kind is RawLineKind.INTERNAL:
             c.internal_event_count += 1
@@ -292,6 +295,7 @@ class IngestionPipeline:
             lag = max(0, monotonic_ms() - c.last_read_monotonic)
         return IngestionStats(
             lines_read=c.lines_read,
+            events_parsed=c.events_parsed,
             events_valid=c.events_valid,
             events_persisted=c.events_persisted,
             events_invalid=c.events_invalid,
