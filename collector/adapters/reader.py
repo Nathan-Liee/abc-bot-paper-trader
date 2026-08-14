@@ -7,9 +7,9 @@ reader:
   cursor offset are read on each poll
 * leaves a trailing line without a newline *held* until it completes
   (a line is only published once a full line terminator is seen)
-* detects rotation / replacement (new inode, or size shrank below the
-  cursor) and signals :attr:`PollResult.rotation` so the pipeline can
-  reset the cursor
+* detects rotation / replacement (new inode, disappearance gap, or size
+  shrank below the cursor) and signals :attr:`PollResult.rotation` so the
+  pipeline can reset the cursor
 * reports transient unavailability (missing file, read error) without
   advancing the cursor
 
@@ -69,6 +69,7 @@ class JsonlFileReader:
         self._offset = max(start_offset, 0)
         self._partial: bytes = b""
         self._identity: tuple[int, int] | None = None
+        self._gap = False
 
     @property
     def path(self) -> Path:
@@ -88,18 +89,29 @@ class JsonlFileReader:
         self._offset = 0
         self._partial = b""
         self._identity = None
+        self._gap = False
 
     def poll(self) -> PollResult:
         """Read complete lines appended since the previous poll."""
         try:
             stat = self._path.stat()
         except OSError:
+            self._gap = True
             return PollResult(offset=self._offset, unavailable=True)
 
         identity = (stat.st_dev, stat.st_ino)
         rotation = False
 
-        if self._identity is not None and identity != self._identity:
+        if self._identity is not None and self._gap:
+            # File disappeared then reappeared at the same path. Inode
+            # numbers are NOT a reliable rotation signal here: after an
+            # unlink, a fresh file may immediately reuse the old inode
+            # (observed on ext4), so (st_dev, st_ino) can be identical
+            # even though the tail is a new stream. A disappearance gap
+            # is the only remaining evidence - treat it as rotation.
+            self.reset()
+            rotation = True
+        elif self._identity is not None and identity != self._identity:
             # File was replaced (new inode): the tail is a new stream.
             # A held partial line from the old stream must be discarded;
             # the event it would have completed is simply re-read.
@@ -111,6 +123,7 @@ class JsonlFileReader:
             rotation = True
 
         self._identity = identity
+        self._gap = False
 
         if rotation:
             # Wipe the partial buffer: it belongs to the previous stream.
