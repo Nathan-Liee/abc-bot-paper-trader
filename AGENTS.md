@@ -38,8 +38,16 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 
 ```
 CURRENT PHASE:    AI BENCHMARK — Model Benchmark (IN PROGRESS)
-CURRENT MILESTONE: AI Model Benchmark
+CURRENT MILESTONE: CI REGRESSION CLEANUP
 ```
+
+CI regression cleanup is in progress (failure inventory + recovery) before
+the benchmark resumes. Root cause found: `JsonlFileReader` rotation detection
+relied on `(st_dev, st_ino)` identity, which is unreliable after
+unlink→recreate because filesystems (ext4; observed via WSL Linux) may reuse
+the inode number immediately — the pipeline then tailed a NEW stream as if it
+were the old one (silent data misalignment). Fixed with disappearance-gap
+detection.
 
 Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 8 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
@@ -273,3 +281,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | ---- | --------- | ------ | -------- | ----- |
 | 2026-08-14 21:08 +07 | Benchmark kickoff | DONE | this entry | shortlist 8 models fixed; live tracking established; no model final yet |
 | 2026-08-14 21:08 +07 | Benchmark design | IN PROGRESS | — | spec/dataset/runner pending in `docs/validation/ai-benchmark/` |
+| 2026-08-15 +07 | CI regression cleanup | IN PROGRESS | failure inventory + root cause found | GitHub Actions Test step red on last 5 main runs; local Windows suite green. Root cause: reader rotation relied on inode identity; Linux reuses inode after unlink → recreate same-size stream misdetected as tail. Fix: disappearance-gap rotation. Local validation PASS (pytest exit 0, ruff/format/mypy clean). |
