@@ -38,19 +38,21 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 
 ```
 CURRENT PHASE:    AI MODEL BENCHMARK
-CURRENT MILESTONE: READY TO RESUME BENCHMARK
+CURRENT MILESTONE: AI Benchmark Execution
 ```
 
-CI regression cleanup completed 2026-08-15: GitHub Actions green on
-`aab70e5` (run 31820083519, all steps success; previously red on last 5
-main runs at the Test step). Root cause + fix: `JsonlFileReader` rotation
-detection relied on `(st_dev, st_ino)` identity — unreliable after
-unlink→recreate because filesystems (ext4; reproduced via WSL) may reuse
-the inode immediately; new same-size stream was tailed as the old stream.
-Fixed with disappearance-gap detection. Regression test:
-`test_recreate_after_unlink_is_new_stream` (fails pre-fix on Linux).
+Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
+verdict `INVENTORY COMPLETE`, `benchmark-spec.md` v1.0.0, `tests/benchmark/`
+20 tests, CI green on `0a30071`):
 
-Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 8 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
+- AI Model Discovery = COMPLETE (57 models via `GET /v1/models` 2026-08-14)
+- AI Model Inventory = COMPLETE (11 benchmark candidates; free/paid verified, not guessed)
+- Benchmark Specification = COMPLETE (`benchmark-spec.md` v1.0.0)
+- Benchmark Runner = COMPLETE (runner + fail-closed tests 20, committed `aab70e5`)
+- CI Baseline = GREEN (GitHub Actions all steps success, run on `0a30071`)
+- AI Benchmark Execution = IN PROGRESS (not yet run; no model selected)
+
+Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 11 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
 ## 4. Live Implementation Status
 
@@ -70,7 +72,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Reconciliation | ✅ COMPLETE | `collector/reconciliation/`; 4 triggers, idempotent, non-executive (runtime-verified) | `36228cb` |
 | Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
 | Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
-| AI Model Benchmark | 🔄 IN PROGRESS | shortlist 8 models fixed (endpoint discovery 2026-08-14); runner/dataset/results in `docs/validation/ai-benchmark/` | — |
+| AI Model Benchmark | 🔄 IN PROGRESS | 11 candidates (inventory-report.md §11: 8 prior + 3 kgw free); spec v1.0.0 + dataset 12 scenarios + runner + 20 fail-closed tests; execution not yet run | `aab70e5` |
 | AI Selection | ⏳ PENDING | — | — |
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
@@ -90,19 +92,24 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   (next) RESUME AI MODEL BENCHMARK IMPLEMENTATION
-OBJECTIVE:      Reproducible benchmark of shortlist models on custom endpoint
-                http://10.139.136.202:20128/v1 — identical dataset + prompt per
-                model; measure latency (P50/P95/P99), structured-output
-                reliability, consistency, context fidelity, failure safety.
-SHORTLIST:      groq/llama-3.3-70b-versatile
+CURRENT TASK:   AI Benchmark Execution — live run (not yet executed)
+OBJECTIVE:      Reproducible benchmark of 11 shortlist models on custom
+                endpoint http://10.139.136.202:20128/v1 — identical dataset +
+                prompt per model; measure latency (P50/P95/P99),
+                structured-output reliability, consistency, context fidelity,
+                failure safety.
+SHORTLIST (11, per inventory-report.md §11 + benchmark-spec.md §3):
+                groq/llama-3.3-70b-versatile
                 cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast
                 groq/openai/gpt-oss-120b
                 cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast
                 cf/@cf/zai-org/glm-4.7-flash
                 cf/@cf/qwen/qwen2.5-coder-32b-instruct
                 ollama/gpt-oss:120b
-FALLBACK:       cf/@cf/meta/llama-3.2-1b-instruct
+                cf/@cf/meta/llama-3.2-1b-instruct (fallback/ultra-fast)
+                kgw/nvidia/nemotron-3-super-120b-a12b:free
+                kgw/nvidia/nemotron-3-ultra-550b-a55b:free
+                kgw/kilo-auto/free (prompt-mode JSON; non-stream)
 DO NOT:         select final model; touch contract/schema/risk/execution/exit
                 authority; use cx/* as primary (quota-unstable); modify locked
                 architecture; touch HFM Cent/XAUUSDc target.
@@ -119,6 +126,8 @@ DO NOT:         select final model; touch contract/schema/risk/execution/exit
 7. **JSONL Ingestion Adapter** — tail-reader (cursor, partial-line hold, rotation), normalize, canonicalize, schema-validate, checksum, atomic persist. Commit `d3a1f30`/`c47d2d5`. Validated: unit + replay tests; E2E replay of committed fixtures 31/31 checks PASS.
 8. **Reconciliation Service** — OBSERVE→COMPARE→CLASSIFY→RECORD→ESCALATE/ADOPT only; STARTUP/HEARTBEAT/POST_EXECUTION/MISMATCH; deterministic uuid5 ids; no execution. Commit `36228cb`. Validated: E2E (SYNCED / ADOPTED_BROKER / ESCALATED, idempotent skip, orders/positions untouched).
 9. **Phase A Data-Only Validation** — full pipeline audit + fixes (malformed-line metric). Commits `856c527`, `44d090f`. Validated: 339 tests passed, ruff/mypy clean, verdict **PASS WITH WARNINGS**.
+10. **CI Regression Cleanup** — reader rotation bug (inode reuse after unlink→recreate; reproduced on Linux/WSL) fixed with disappearance-gap detection. Commit `1ba7fff`. Validated: CI BASELINE GREEN — run 31820083519 on `aab70e5` all steps success; 359 tests; report `docs/validation/ci-regression-cleanup-report.md`.
+11. **AI Model Discovery + Inventory + Benchmark Spec + Runner** — 57 models via `GET /v1/models`; inventory report verdict `INVENTORY COMPLETE`, 11 benchmark candidates (free/paid verified by probe); spec v1.0.0; runner + 20 fail-closed tests. Commit `aab70e5`. Validated: `docs/validation/ai-benchmark/inventory-report.md`, `benchmark-spec.md`, `tests/benchmark/`.
 
 ## 7. Pending Work (dependency order)
 
@@ -263,12 +272,13 @@ Every time a task completes, the agent MUST update this document:
 ```
 LAST VERIFIED:          2026-08-15 +07:00
 CURRENT PHASE:          AI MODEL BENCHMARK
-CURRENT MILESTONE:      READY TO RESUME BENCHMARK
+CURRENT MILESTONE:      AI Benchmark Execution
 LAST COMPLETED MILESTONE: CI Regression Cleanup (CI BASELINE GREEN)
-LATEST COMMIT:          aab70e5 (CI green, run 31820083519)
+LATEST COMMIT:          0a30071 (CI green, all steps success)
 TEST STATUS:            359 passed; ruff check/format clean; mypy clean (48 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            RESUME AI MODEL BENCHMARK IMPLEMENTATION
+NEXT ACTION:            Run AI benchmark execution (11 models, spec v1.0.0);
+                        no AI final selection on this milestone.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -283,3 +293,8 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-14 21:08 +07 | Benchmark design | IN PROGRESS | — | spec/dataset/runner pending in `docs/validation/ai-benchmark/` |
 | 2026-08-15 +07 | CI regression cleanup | IN PROGRESS | failure inventory + root cause found | GitHub Actions Test step red on last 5 main runs; local Windows suite green. Root cause: reader rotation relied on inode identity; Linux reuses inode after unlink → recreate same-size stream misdetected as tail. Fix: disappearance-gap rotation. Local validation PASS (pytest exit 0, ruff/format/mypy clean). |
 | 2026-08-15 +07 | CI regression cleanup | DONE | CI BASELINE GREEN — run 31820083519 on `aab70e5` all steps success | Fix pushed (`1ba7fff`, `99b9653`, `aab70e5`); GitHub Actions test/lint/format/type-check all PASS; working tree clean; 359 tests. Handoff: RESUME AI MODEL BENCHMARK IMPLEMENTATION. |
+| 2026-08-15 +07 | AI Model Discovery | COMPLETE | `GET /v1/models` 200 OK, 57 model IDs; `inventory-report.md` verdict `INVENTORY COMPLETE` | All 14 screenshot IDs resolved; `oc/*` 8 classified UNAVAILABLE; `kew/kgv` → `kgw/` prefix correction. |
+| 2026-08-15 +07 | AI Model Inventory | COMPLETE | `inventory-report.md` §11 — 11 benchmark candidates | 8 prior shortlist + 3 kgw free (nemotron super/ultra :free, kilo-auto/free). Free/paid verified by probe (200/402), not guessed. |
+| 2026-08-15 +07 | Benchmark Specification | COMPLETE | `benchmark-spec.md` v1.0.0 (12 scenarios, 3 repeats, fail-closed rules, scoring weights provisional) | 11 models × 36 req = 396 requests budget; runner does NOT send `response_format` (prompt-mode JSON). |
+| 2026-08-15 +07 | Benchmark Runner | COMPLETE | `tests/benchmark/test_benchmark_runner.py` 20 fail-closed tests; runner.py committed `aab70e5` | Timeout/429/transport/parse/unexpected-tool-call → NO-TRADE, confidence 0.0. |
+| 2026-08-15 +07 | AI Benchmark Execution | IN PROGRESS | not yet run — next actionable | AGENTS.md synced to 11 candidates; CI green (`0a30071`); no model selected. |
