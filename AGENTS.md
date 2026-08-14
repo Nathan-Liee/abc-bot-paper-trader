@@ -37,17 +37,18 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    AI BENCHMARK — Model Benchmark (IN PROGRESS)
-CURRENT MILESTONE: CI REGRESSION CLEANUP
+CURRENT PHASE:    AI MODEL BENCHMARK
+CURRENT MILESTONE: READY TO RESUME BENCHMARK
 ```
 
-CI regression cleanup is in progress (failure inventory + recovery) before
-the benchmark resumes. Root cause found: `JsonlFileReader` rotation detection
-relied on `(st_dev, st_ino)` identity, which is unreliable after
-unlink→recreate because filesystems (ext4; observed via WSL Linux) may reuse
-the inode number immediately — the pipeline then tailed a NEW stream as if it
-were the old one (silent data misalignment). Fixed with disappearance-gap
-detection.
+CI regression cleanup completed 2026-08-15: GitHub Actions green on
+`aab70e5` (run 31820083519, all steps success; previously red on last 5
+main runs at the Test step). Root cause + fix: `JsonlFileReader` rotation
+detection relied on `(st_dev, st_ino)` identity — unreliable after
+unlink→recreate because filesystems (ext4; reproduced via WSL) may reuse
+the inode immediately; new same-size stream was tailed as the old stream.
+Fixed with disappearance-gap detection. Regression test:
+`test_recreate_after_unlink_is_new_stream` (fails pre-fix on Linux).
 
 Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 8 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
@@ -89,7 +90,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   AI Model Benchmark — implementation + live run
+CURRENT TASK:   (next) RESUME AI MODEL BENCHMARK IMPLEMENTATION
 OBJECTIVE:      Reproducible benchmark of shortlist models on custom endpoint
                 http://10.139.136.202:20128/v1 — identical dataset + prompt per
                 model; measure latency (P50/P95/P99), structured-output
@@ -260,15 +261,14 @@ Every time a task completes, the agent MUST update this document:
 ## 15. Handoff Snapshot
 
 ```
-LAST VERIFIED:          2026-08-14 21:08 +07:00
-CURRENT PHASE:          AI BENCHMARK — Model Benchmark
-CURRENT MILESTONE:      AI Model Benchmark
-LAST COMPLETED MILESTONE: Phase A Data-Only Validation (PASS WITH WARNINGS)
-LATEST COMMIT:          44d090f
-TEST STATUS:            339 passed; ruff check/format clean; mypy clean (48 files)
+LAST VERIFIED:          2026-08-15 +07:00
+CURRENT PHASE:          AI MODEL BENCHMARK
+CURRENT MILESTONE:      READY TO RESUME BENCHMARK
+LAST COMPLETED MILESTONE: CI Regression Cleanup (CI BASELINE GREEN)
+LATEST COMMIT:          aab70e5 (CI green, run 31820083519)
+TEST STATUS:            359 passed; ruff check/format clean; mypy clean (48 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            Build benchmark dataset + runner; live benchmark run;
-                        comparison + recommendation; final report.
+NEXT ACTION:            RESUME AI MODEL BENCHMARK IMPLEMENTATION
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -282,3 +282,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-14 21:08 +07 | Benchmark kickoff | DONE | this entry | shortlist 8 models fixed; live tracking established; no model final yet |
 | 2026-08-14 21:08 +07 | Benchmark design | IN PROGRESS | — | spec/dataset/runner pending in `docs/validation/ai-benchmark/` |
 | 2026-08-15 +07 | CI regression cleanup | IN PROGRESS | failure inventory + root cause found | GitHub Actions Test step red on last 5 main runs; local Windows suite green. Root cause: reader rotation relied on inode identity; Linux reuses inode after unlink → recreate same-size stream misdetected as tail. Fix: disappearance-gap rotation. Local validation PASS (pytest exit 0, ruff/format/mypy clean). |
+| 2026-08-15 +07 | CI regression cleanup | DONE | CI BASELINE GREEN — run 31820083519 on `aab70e5` all steps success | Fix pushed (`1ba7fff`, `99b9653`, `aab70e5`); GitHub Actions test/lint/format/type-check all PASS; working tree clean; 359 tests. Handoff: RESUME AI MODEL BENCHMARK IMPLEMENTATION. |
