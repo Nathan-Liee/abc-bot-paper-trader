@@ -15,6 +15,8 @@
 //|   - explicit flush policy: caller flushes via Flush() (Bridge     |
 //|     flushes every InpFlushLines writes, every heartbeat, and in   |
 //|     OnDeinit).                                                    |
+//|   - parent directories are created before every open (idempotent, |
+//|     relative to MQL5\Files); creation failure is explicit.        |
 //+------------------------------------------------------------------+
 #property strict
 
@@ -43,7 +45,13 @@ public:
 
    bool Open(const string path, const int maxReopenAttempts)
    {
-      m_path = path;
+      string normalized = NormalizePath(path);
+      if(normalized == "")
+      {
+         Print("mql5-bridge: empty event file path; exporter disabled");
+         return false;
+      }
+      m_path = normalized;
       m_maxReopenAttempts = maxReopenAttempts;
       m_handle = OpenAppend(m_path);
       return m_handle != INVALID_HANDLE;
@@ -100,14 +108,79 @@ public:
    }
 
 private:
+   // Normalize path to MQL5\Files-relative form: accept both slash
+   // styles, strip leading separators, never allow an absolute path.
+   string NormalizePath(const string path)
+   {
+      string s = path;
+      StringReplace(s, "/", "\\");
+      while(StringLen(s) > 0 && StringGetCharacter(s, 0) == '\\')
+         s = StringSubstr(s, 1);
+      return s;
+   }
+
+   // Directory part of a relative file path ("" when none).
+   string DirectoryOf(const string path)
+   {
+      string segments[];
+      int count = StringSplit(path, '\\', segments);
+      if(count <= 1)
+         return "";
+      string dir = segments[0];
+      for(int i = 1; i < count - 1; i++)
+         dir += "\\" + segments[i];
+      return dir;
+   }
+
+   // Idempotent directory creation relative to MQL5\Files, segment by
+   // segment (build-safe: does not rely on recursive FolderCreate).
+   //   - existing directory  -> no-op success
+   //   - missing directory   -> created
+   //   - creation failure    -> explicit error with the MQL5 error code
+   bool EnsureDirectory(const string dirPath)
+   {
+      if(dirPath == "")
+         return true;
+      string segments[];
+      int count = StringSplit(dirPath, '\\', segments);
+      string acc = "";
+      for(int i = 0; i < count; i++)
+      {
+         if(StringLen(segments[i]) == 0)
+            continue;
+         if(StringLen(acc) > 0)
+            acc += "\\";
+         acc += segments[i];
+         if(FolderCreate(acc))
+            continue;
+         // Some builds return false for an already-existing folder;
+         // only a real error (GetLastError() != 0) is a failure.
+         if(GetLastError() != 0)
+         {
+            Print("mql5-bridge: cannot create directory '", acc, "' "
+                  "(error ", IntegerToString(GetLastError()), ")");
+            return false;
+         }
+      }
+      return true;
+   }
+
    int OpenAppend(const string path)
    {
+      if(!EnsureDirectory(DirectoryOf(path)))
+         return INVALID_HANDLE;
       int handle = FileOpen(path, FILE_READ | FILE_WRITE | FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_ANSI,
                             0, BRIDGE_EXPORTER_CP_UTF8);
       if(handle == INVALID_HANDLE)
+      {
+         Print("mql5-bridge: cannot open '", path, "' (error ",
+               IntegerToString(GetLastError()), ")");
          return INVALID_HANDLE;
+      }
       if(!FileSeek(handle, 0, SEEK_END))
       {
+         Print("mql5-bridge: cannot seek to end of '", path, "' (error ",
+               IntegerToString(GetLastError()), ")");
          FileClose(handle);
          return INVALID_HANDLE;
       }
