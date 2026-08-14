@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Nathan-Liee/abc-bot-paper-trader/schemas/event.schema.json",
+  "title": "canonical-event",
+  "description": "PLACEHOLDER schema for the canonical event contract. Properties are intentionally undefined: they will be fixed when the Paper-Trading Collector Technical Design and the HFM MT5 Paper-Trading Measurement Specification are implemented. Consumers must not rely on this file yet.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}

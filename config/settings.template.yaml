@@ -1,0 +1,37 @@
+# ABC Bot Paper Trader — settings template
+# ---------------------------------------------------------
+# Copy to `config/settings.local.yaml` and adjust. Local files
+# are ignored by git. Only non-execution values are configurable.
+# ---------------------------------------------------------
+
+app:
+  # environment: development | test | production (default: development)
+  env: development
+
+  # collector mode — only PAPER_DATA_ONLY is supported (fixed)
+  collector_mode: PAPER_DATA_ONLY
+
+  # log level: DEBUG | INFO | WARNING | ERROR | CRITICAL
+  log_level: INFO
+
+storage:
+  # Paths are relative to the repository root.
+  data_dir: ./data
+  sqlite_dir: ./data/sqlite
+  events_dir: ./data/events
+  analytics_dir: ./data/analytics
+
+# =========================================================
+# SAFETY — fixed, do not edit
+# ---------------------------------------------------------
+# These values are hard-coded safety defaults: they exist for
+# documentation and audit only. The collector always runs with
+# live trading disabled, read-only mode enabled, demo execution
+# disabled, and the PAPER_DATA_ONLY mode. They cannot be
+# overridden by this file or by environment variables.
+# =========================================================
+safety:
+  live_trading_enabled: false
+  read_only_mode: true
+  demo_execution_allowed: false
+  default_mode: PAPER_DATA_ONLY

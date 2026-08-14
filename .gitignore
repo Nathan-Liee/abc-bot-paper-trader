@@ -216,3 +216,46 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# =========================================================
+# abc-bot-paper-trader — project-specific
+# =========================================================
+
+# Credentials / secrets (never commit)
+*_credentials*
+credentials.*
+secrets.*
+*.pem
+*.key
+*.p12
+*.pfx
+config/settings.local.*
+config/*.local.yaml
+
+# SQLite runtime files (generated)
+data/**/*.db
+data/**/*.db-*
+data/**/*.db-wal
+data/**/*.db-shm
+data/**/*.sqlite
+data/**/*.sqlite3
+
+# Generated data artifacts (CSV / JSONL / raw)
+data/events/**/*.jsonl
+data/analytics/**/*.csv
+data/analytics/**/*.json
+data/raw/**
+
+# Logs (runtime)
+logs/
+*.log
+
+# MQL5 compiled artifacts
+mql5-bridge/**/*.ex4
+mql5-bridge/**/*.ex5
+mql5-bridge/**/MQL5/Experts/.cache/*
+
+# IDE files
+.vscode/
+.idea/
+*.iml
