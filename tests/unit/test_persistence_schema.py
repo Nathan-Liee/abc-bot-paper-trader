@@ -21,6 +21,7 @@ TABLES = {
     "market_snapshots",
     "reconciliation_events",
     "invalid_trades",
+    "ingestion_cursor",
     "schema_migrations",
 }
 
@@ -59,12 +60,12 @@ def test_migration_is_recorded_exactly_once(tmp_path: Path) -> None:
     db = tmp_path / "collector.db"
     with PersistenceRepository(db) as repo:
         rows = repo.connection.execute("SELECT * FROM schema_migrations").fetchall()
-        assert len(rows) == 1
-        assert rows[0]["version"] == 1
-        assert rows[0]["name"] == "initial_schema"
-        assert rows[0]["applied_at"] is not None
+        assert len(rows) == 2
+        assert {row["version"] for row in rows} == {1, 2}
+        assert {row["name"] for row in rows} == {"initial_schema", "ingestion_cursor"}
+        assert all(row["applied_at"] is not None for row in rows)
     with PersistenceRepository(db) as repo:
-        assert len(repo.connection.execute("SELECT * FROM schema_migrations").fetchall()) == 1
+        assert len(repo.connection.execute("SELECT * FROM schema_migrations").fetchall()) == 2
 
 
 def test_apply_migrations_returns_only_newly_applied(tmp_path: Path) -> None:
@@ -73,14 +74,14 @@ def test_apply_migrations_returns_only_newly_applied(tmp_path: Path) -> None:
     fresh.row_factory = sqlite3.Row
     try:
         first = apply_migrations(fresh)
-        assert first == (1,)
+        assert first == (1, 2)
         second = apply_migrations(fresh)
         assert second == ()
-        assert applied_versions(fresh) == {1}
+        assert applied_versions(fresh) == {1, 2}
     finally:
         fresh.close()
     with PersistenceRepository(db) as repo:
-        assert applied_versions(repo.connection) == {1}
+        assert applied_versions(repo.connection) == {1, 2}
 
 
 def test_events_table_is_append_only(tmp_path: Path) -> None:

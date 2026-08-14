@@ -1,0 +1,8 @@
+{"event_type": "TICK_RECEIVED", "source": "mql5", "ts_bridge": "2026-08-14T09:00:00Z", "payload": {"symbol": "XAUUSDc", "bid": 2000.0, "ask": 2000.5, "mid": 2000.25, "spread": 0.5, "ts_source": "2026-08-14T09:00:00Z", "tick_volume": 1}}
+{"event_type": "TICK_RECEIVED", "source": "mql5", "ts_bridge": "2026-08-14T09:00:01Z", "payload": {"symbol": "XAUUSD", "bid": 2000.1, "ask": 2000.6, "mid": 2000.35, "spread": 0.5, "ts_source": "2026-08-14T09:00:01Z"}}
+{"event_type": "ERROR", "source": "mql5", "ts_bridge": "2026-08-14T09:00:02Z", "payload": {"error_code": "BRIDGE_WRITE_FAIL", "component": "mql5-bridge", "severity": "ERROR", "message": "tick write failed (error_count=3)"}}
+{"event_type": "TIMEOUT", "source": "mql5", "ts_bridge": "2026-08-14T09:00:03Z", "payload": {"timeout_code": "TERMINAL_DISCONNECTED", "component": "mql5-bridge", "severity": "WARN", "message": "terminal disconnected; degraded mode"}}
+{"event_type": "HEARTBEAT", "source": "mql5", "ts_bridge": "2026-08-14T09:00:04Z", "payload": {"status": "RUNNING", "terminal_connected": true, "symbol_available": true, "error_count": 0}}
+{"event_type": "POSITION_SNAPSHOT", "source": "mql5", "ts_bridge": "2026-08-14T09:00:05Z", "payload": {"broker_position_id": "broker-position-9c2f", "direction": "BUY", "volume": 0.5, "entry_price": 1998.0}}
+{"event_type": "ORDER_SNAPSHOT", "source": "mql5", "ts_bridge": "2026-08-14T09:00:06Z", "payload": {"broker_order_id": "broker-order-7d1e", "broker_state": "FILLED", "volume": 0.5, "price": 1998.0}}
+{"event_type": "ORDER_ACKNOWLEDGED", "source": "mql5", "ts_bridge": "2026-08-14T09:00:07Z", "payload": {"broker_order_id": "broker-order-8f3a", "broker_state": "PLACED", "ack_ts": "2026-08-14T09:00:07Z"}}

@@ -55,6 +55,8 @@ class Settings:
     sqlite_dir: Path = PROJECT_ROOT / "data" / "sqlite"
     events_dir: Path = PROJECT_ROOT / "data" / "events"
     analytics_dir: Path = PROJECT_ROOT / "data" / "analytics"
+    jsonl_source: Path = PROJECT_ROOT / "data" / "raw" / "mql5_bridge_events.jsonl"
+    ingestion_poll_seconds: float = 1.0
     log_level: str = "INFO"
 
     def __post_init__(self) -> None:
@@ -72,6 +74,8 @@ class Settings:
             raise ValueError("read-only mode cannot be disabled")
         if self.demo_execution_allowed:
             raise ValueError("demo execution is forbidden in abc-bot-paper-trader")
+        if self.ingestion_poll_seconds <= 0:
+            raise ValueError("ingestion_poll_seconds must be greater than zero")
         if self.log_level not in SUPPORTED_LOG_LEVELS:
             raise ValueError(
                 f"unsupported log level {self.log_level!r}; must be one of {SUPPORTED_LOG_LEVELS}"
@@ -85,6 +89,10 @@ def _as_bool(value: str) -> bool:
 def _as_path(raw: str) -> Path:
     path = Path(raw)
     return path if path.is_absolute() else PROJECT_ROOT / path
+
+
+def _as_float(raw: str) -> float:
+    return float(raw)
 
 
 def load_settings() -> Settings:
@@ -105,5 +113,9 @@ def load_settings() -> Settings:
         sqlite_dir=_as_path(os.getenv("ABC_BOT_SQLITE_DIR", "data/sqlite")),
         events_dir=_as_path(os.getenv("ABC_BOT_EVENTS_DIR", "data/events")),
         analytics_dir=_as_path(os.getenv("ABC_BOT_ANALYTICS_DIR", "data/analytics")),
+        jsonl_source=_as_path(
+            os.getenv("ABC_BOT_JSONL_SOURCE", "data/raw/mql5_bridge_events.jsonl")
+        ),
+        ingestion_poll_seconds=_as_float(os.getenv("ABC_BOT_INGESTION_POLL_SECONDS", "1.0")),
         log_level=os.getenv("ABC_BOT_LOG_LEVEL", "INFO").upper(),
     )

@@ -13,7 +13,11 @@ from dataclasses import dataclass
 
 from collector.event_model.timestamps import now_utc_ms
 from collector.persistence.errors import PersistenceError
-from collector.persistence.schema import SCHEMA_MIGRATIONS_DDL, SCHEMA_STATEMENTS
+from collector.persistence.schema import (
+    _MIGRATION_2_STATEMENTS,
+    SCHEMA_MIGRATIONS_DDL,
+    SCHEMA_STATEMENTS,
+)
 
 
 @dataclass(frozen=True)
@@ -25,6 +29,7 @@ class Migration:
 
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(version=1, name="initial_schema", statements=SCHEMA_STATEMENTS),
+    Migration(version=2, name="ingestion_cursor", statements=_MIGRATION_2_STATEMENTS),
 )
 
 

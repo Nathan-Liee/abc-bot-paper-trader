@@ -132,12 +132,27 @@ CREATE TABLE IF NOT EXISTS invalid_trades (
 )
 """
 
+# Ingestion cursor: durable per-source byte-offset state for the JSONL
+# ingestion adapter. One row per source file; byte_offset is the start
+# of the next un-consumed line (invariant: always a line boundary).
+_INGESTION_CURSOR_DDL = """
+CREATE TABLE IF NOT EXISTS ingestion_cursor (
+    source_path TEXT PRIMARY KEY,
+    byte_offset INTEGER NOT NULL,
+    line_number INTEGER,
+    last_event_id TEXT,
+    updated_ts TEXT NOT NULL
+)
+"""
+
 _INDEXES_DDL = (
     "CREATE INDEX IF NOT EXISTS idx_events_trade_ts ON events(trade_id, ts_event)",
     "CREATE INDEX IF NOT EXISTS idx_events_correlation_ts ON events(correlation_id, ts_event)",
     "CREATE INDEX IF NOT EXISTS idx_events_type_ts ON events(event_type, ts_event)",
     "CREATE INDEX IF NOT EXISTS idx_events_checksum ON events(checksum)",
 )
+
+_MIGRATION_2_STATEMENTS: tuple[str, ...] = (_INGESTION_CURSOR_DDL,)
 
 _APPEND_ONLY_TRIGGERS_DDL = (
     """

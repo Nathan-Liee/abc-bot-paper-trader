@@ -25,6 +25,11 @@ from pathlib import Path
 
 from collector.event_model.envelope import EventEnvelope
 from collector.event_model.validation import validate_event_dict
+from collector.persistence.cursor import (
+    IngestionCursor,
+    read_ingestion_cursor,
+    write_ingestion_cursor,
+)
 from collector.persistence.errors import PersistenceError
 from collector.persistence.migrations import apply_migrations
 from collector.persistence.projector import apply_derived_state
@@ -300,6 +305,38 @@ class PersistenceRepository:
         with self.transaction() as conn:
             result = self._insert_event_row(conn, event)
             apply_derived_state(conn, event)
+            return result
+
+    # ------------------------------------------------------------------
+    # Ingestion cursor: durable per-source byte offsets
+    # ------------------------------------------------------------------
+
+    def get_ingestion_cursor(self, source_path: str) -> IngestionCursor | None:
+        """Return the persisted ingestion cursor for *source_path*."""
+        return read_ingestion_cursor(self.connection, source_path)
+
+    def save_ingestion_cursor(self, cursor: IngestionCursor) -> None:
+        """Persist *cursor* in its own transaction (progress-only state)."""
+        with self.transaction() as conn:
+            write_ingestion_cursor(conn, cursor)
+
+    def insert_event_with_cursor(
+        self, event: EventEnvelope, cursor: IngestionCursor
+    ) -> InsertResult:
+        """Append *event* and advance the ingestion cursor atomically.
+
+        The event row and the cursor update are committed in a single
+        transaction: the cursor never moves past an event that was not
+        durably persisted, so a restart re-reads uncommitted lines and
+        the idempotent event insert absorbs the duplicates.
+        """
+        _ = self.connection
+        validate_event_dict(event.to_dict())
+        if not event.verify_checksum():
+            raise PersistenceError(f"refusing to persist event {event.event_id}: checksum mismatch")
+        with self.transaction() as conn:
+            result = self._insert_event_row(conn, event)
+            write_ingestion_cursor(conn, cursor)
             return result
 
     def get_event(self, event_id: str) -> EventEnvelope | None:

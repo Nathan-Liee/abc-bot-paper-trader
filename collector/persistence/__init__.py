@@ -11,6 +11,11 @@ Public surface:
 * ``PersistenceError`` - every persistence failure raises this
 """
 
+from collector.persistence.cursor import (
+    IngestionCursor,
+    read_ingestion_cursor,
+    write_ingestion_cursor,
+)
 from collector.persistence.errors import PersistenceError
 from collector.persistence.export import (
     export_events_csv,
@@ -41,6 +46,7 @@ from collector.persistence.repository import InsertResult, PersistenceRepository
 
 __all__ = [
     "ERROR",
+    "IngestionCursor",
     "InsertResult",
     "IntegrityCheck",
     "IntegrityReport",
@@ -63,5 +69,7 @@ __all__ = [
     "export_reconciliations_jsonl",
     "export_trades_csv",
     "export_trades_jsonl",
+    "read_ingestion_cursor",
     "run_integrity_checks",
+    "write_ingestion_cursor",
 ]
