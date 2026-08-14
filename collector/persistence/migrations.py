@@ -15,6 +15,7 @@ from collector.event_model.timestamps import now_utc_ms
 from collector.persistence.errors import PersistenceError
 from collector.persistence.schema import (
     _MIGRATION_2_STATEMENTS,
+    _MIGRATION_3_STATEMENTS,
     SCHEMA_MIGRATIONS_DDL,
     SCHEMA_STATEMENTS,
 )
@@ -30,6 +31,7 @@ class Migration:
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(version=1, name="initial_schema", statements=SCHEMA_STATEMENTS),
     Migration(version=2, name="ingestion_cursor", statements=_MIGRATION_2_STATEMENTS),
+    Migration(version=3, name="reconciliation_metadata", statements=_MIGRATION_3_STATEMENTS),
 )
 
 

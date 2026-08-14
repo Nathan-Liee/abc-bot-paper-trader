@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +33,15 @@ from collector.persistence.cursor import (
 from collector.persistence.errors import PersistenceError
 from collector.persistence.migrations import apply_migrations
 from collector.persistence.projector import apply_derived_state
+from collector.persistence.reconciling import (
+    AdoptionRecord,
+    ReconciliationRunRecord,
+    read_adoptions_for,
+    read_latest_reconciliation_run,
+    read_reconciliation_runs,
+    write_reconciliation_adoption,
+    write_reconciliation_run,
+)
 from collector.persistence.records import (
     InvalidTradeRecord,
     OrderRecord,
@@ -465,6 +474,49 @@ class PersistenceRepository:
             "SELECT * FROM positions WHERE state = 'OPEN' ORDER BY open_ts, broker_position_id"
         ).fetchall()
         return [PositionRecord.from_row(row) for row in rows]
+
+    def open_orders(self) -> list[OrderRecord]:
+        rows = self.connection.execute(
+            "SELECT * FROM orders WHERE order_state IS NULL "
+            "OR order_state NOT IN ('FILLED', 'CANCELLED', 'REJECTED') "
+            "ORDER BY submit_ts, broker_order_id"
+        ).fetchall()
+        return [OrderRecord.from_row(row) for row in rows]
+
+    def save_reconciliation_run(
+        self,
+        event: EventEnvelope,
+        run: ReconciliationRunRecord,
+        adoptions: Sequence[AdoptionRecord] = (),
+    ) -> InsertResult:
+        """Persist a reconciliation run atomically.
+
+        The canonical ``RECONCILIATION`` event (with its derived
+        ``reconciliation_events`` row), the run metadata, and any adopted
+        broker entities are committed in a single transaction. Any
+        failure rolls the whole run back.
+        """
+        _ = self.connection
+        validate_event_dict(event.to_dict())
+        if not event.verify_checksum():
+            raise PersistenceError(f"refusing to persist event {event.event_id}: checksum mismatch")
+        with self.transaction() as conn:
+            result = self._insert_event_row(conn, event)
+            apply_derived_state(conn, event)
+            write_reconciliation_run(conn, run)
+            for adoption in adoptions:
+                write_reconciliation_adoption(conn, adoption)
+            return result
+
+    def get_latest_reconciliation_run(self) -> ReconciliationRunRecord | None:
+        """Return the most recent reconciliation run, or None."""
+        return read_latest_reconciliation_run(self.connection)
+
+    def recent_reconciliation_runs(self, limit: int = 50) -> list[ReconciliationRunRecord]:
+        return read_reconciliation_runs(self.connection, limit=limit)
+
+    def adoptions_for(self, reconciliation_id: str) -> list[AdoptionRecord]:
+        return read_adoptions_for(self.connection, reconciliation_id)
 
     def recent_reconciliations(self, limit: int = 50) -> list[ReconciliationRecord]:
         rows = self.connection.execute(

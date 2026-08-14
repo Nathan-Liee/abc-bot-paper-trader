@@ -145,6 +145,38 @@ CREATE TABLE IF NOT EXISTS ingestion_cursor (
 )
 """
 
+# Reconciliation service metadata: one row per reconciliation run and
+# one row per adopted broker entity. Adoption records only capture
+# *observed* broker state with explicit lineage; they never fabricate
+# canonical events for unobserved history.
+_RECONCILIATION_RUNS_DDL = """
+CREATE TABLE IF NOT EXISTS reconciliation_runs (
+    reconciliation_id TEXT PRIMARY KEY,
+    trigger TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    result TEXT NOT NULL,
+    action TEXT NOT NULL,
+    mismatch INTEGER NOT NULL,
+    run_ts TEXT NOT NULL
+)
+"""
+
+_RECONCILIATION_ADOPTIONS_DDL = """
+CREATE TABLE IF NOT EXISTS reconciliation_adoptions (
+    adoption_id TEXT PRIMARY KEY,
+    reconciliation_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    broker_id TEXT NOT NULL,
+    symbol TEXT,
+    direction TEXT,
+    volume REAL,
+    open_price REAL,
+    broker_state TEXT,
+    reason TEXT NOT NULL,
+    adopted_ts TEXT NOT NULL
+)
+"""
+
 _INDEXES_DDL = (
     "CREATE INDEX IF NOT EXISTS idx_events_trade_ts ON events(trade_id, ts_event)",
     "CREATE INDEX IF NOT EXISTS idx_events_correlation_ts ON events(correlation_id, ts_event)",
@@ -153,6 +185,11 @@ _INDEXES_DDL = (
 )
 
 _MIGRATION_2_STATEMENTS: tuple[str, ...] = (_INGESTION_CURSOR_DDL,)
+
+_MIGRATION_3_STATEMENTS: tuple[str, ...] = (
+    _RECONCILIATION_RUNS_DDL,
+    _RECONCILIATION_ADOPTIONS_DDL,
+)
 
 _APPEND_ONLY_TRIGGERS_DDL = (
     """

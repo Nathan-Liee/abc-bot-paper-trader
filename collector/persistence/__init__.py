@@ -35,6 +35,10 @@ from collector.persistence.integrity import (
 )
 from collector.persistence.migrations import MIGRATIONS, Migration, apply_migrations
 from collector.persistence.projector import apply_derived_state
+from collector.persistence.reconciling import (
+    AdoptionRecord,
+    ReconciliationRunRecord,
+)
 from collector.persistence.records import (
     InvalidTradeRecord,
     OrderRecord,
@@ -46,6 +50,7 @@ from collector.persistence.repository import InsertResult, PersistenceRepository
 
 __all__ = [
     "ERROR",
+    "AdoptionRecord",
     "IngestionCursor",
     "InsertResult",
     "IntegrityCheck",
@@ -59,6 +64,7 @@ __all__ = [
     "PersistenceRepository",
     "PositionRecord",
     "ReconciliationRecord",
+    "ReconciliationRunRecord",
     "TradeRecord",
     "WARNING",
     "apply_derived_state",

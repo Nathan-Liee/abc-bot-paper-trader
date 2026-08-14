@@ -57,6 +57,7 @@ class Settings:
     analytics_dir: Path = PROJECT_ROOT / "data" / "analytics"
     jsonl_source: Path = PROJECT_ROOT / "data" / "raw" / "mql5_bridge_events.jsonl"
     ingestion_poll_seconds: float = 1.0
+    reconciliation_interval_seconds: float = 60.0
     log_level: str = "INFO"
 
     def __post_init__(self) -> None:
@@ -76,6 +77,8 @@ class Settings:
             raise ValueError("demo execution is forbidden in abc-bot-paper-trader")
         if self.ingestion_poll_seconds <= 0:
             raise ValueError("ingestion_poll_seconds must be greater than zero")
+        if self.reconciliation_interval_seconds <= 0:
+            raise ValueError("reconciliation_interval_seconds must be greater than zero")
         if self.log_level not in SUPPORTED_LOG_LEVELS:
             raise ValueError(
                 f"unsupported log level {self.log_level!r}; must be one of {SUPPORTED_LOG_LEVELS}"
@@ -117,5 +120,8 @@ def load_settings() -> Settings:
             os.getenv("ABC_BOT_JSONL_SOURCE", "data/raw/mql5_bridge_events.jsonl")
         ),
         ingestion_poll_seconds=_as_float(os.getenv("ABC_BOT_INGESTION_POLL_SECONDS", "1.0")),
+        reconciliation_interval_seconds=_as_float(
+            os.getenv("ABC_BOT_RECONCILIATION_INTERVAL_SECONDS", "60.0")
+        ),
         log_level=os.getenv("ABC_BOT_LOG_LEVEL", "INFO").upper(),
     )
