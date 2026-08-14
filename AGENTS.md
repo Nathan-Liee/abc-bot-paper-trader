@@ -37,11 +37,11 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    Phase A — Data Collection (infrastructure validated 2026-08-14)
-CURRENT MILESTONE: Phase A Data Collection
+CURRENT PHASE:    AI BENCHMARK — Model Benchmark (IN PROGRESS)
+CURRENT MILESTONE: AI Model Benchmark
 ```
 
-Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). No blocker. Next actionable milestone: Phase A Data Collection on HFM Cent `XAUUSDc`.
+Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 8 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
 ## 4. Live Implementation Status
 
@@ -61,7 +61,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Reconciliation | ✅ COMPLETE | `collector/reconciliation/`; 4 triggers, idempotent, non-executive (runtime-verified) | `36228cb` |
 | Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
 | Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
-| AI Model Benchmark | ⏳ PENDING | preliminary requirements in validation report only | — |
+| AI Model Benchmark | 🔄 IN PROGRESS | shortlist 8 models fixed (endpoint discovery 2026-08-14); runner/dataset/results in `docs/validation/ai-benchmark/` | — |
 | AI Selection | ⏳ PENDING | — | — |
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
@@ -81,17 +81,22 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Start Phase A Data Collection (NOT STARTED — next actionable)
-OBJECTIVE:      Attach MQL5 bridge to HFM Cent XAUUSDc, run collector tailer
-                + reconciliation heartbeats, begin ≥200-trade paper-trading
-                evidence accumulation.
-SCOPE:          Bridge attach & config (XAUUSDc), JSONL growth, collector
-                ingestion, cursor recovery, reconciliation STARTUP/HEARTBEAT,
-                data-quality monitoring (bid/ask/mid/spread, spread economics
-                measured but NOT used for decisions).
-DO NOT START:   AI benchmark/selection, Market Context, Trigger, AI Decision,
-                Risk, Lot, Exposure, Execution, Exit, Compounding, any
-                strategy paper trading, any order submission.
+CURRENT TASK:   AI Model Benchmark — implementation + live run
+OBJECTIVE:      Reproducible benchmark of shortlist models on custom endpoint
+                http://10.139.136.202:20128/v1 — identical dataset + prompt per
+                model; measure latency (P50/P95/P99), structured-output
+                reliability, consistency, context fidelity, failure safety.
+SHORTLIST:      groq/llama-3.3-70b-versatile
+                cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast
+                groq/openai/gpt-oss-120b
+                cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast
+                cf/@cf/zai-org/glm-4.7-flash
+                cf/@cf/qwen/qwen2.5-coder-32b-instruct
+                ollama/gpt-oss:120b
+FALLBACK:       cf/@cf/meta/llama-3.2-1b-instruct
+DO NOT:         select final model; touch contract/schema/risk/execution/exit
+                authority; use cx/* as primary (quota-unstable); modify locked
+                architecture; touch HFM Cent/XAUUSDc target.
 ```
 
 ## 6. Completed Work
@@ -247,15 +252,24 @@ Every time a task completes, the agent MUST update this document:
 ## 15. Handoff Snapshot
 
 ```
-LAST VERIFIED:          2026-08-14 21:00 +07:00
-CURRENT PHASE:          Phase A — Data Collection
-CURRENT MILESTONE:      Phase A Data Collection
+LAST VERIFIED:          2026-08-14 21:08 +07:00
+CURRENT PHASE:          AI BENCHMARK — Model Benchmark
+CURRENT MILESTONE:      AI Model Benchmark
 LAST COMPLETED MILESTONE: Phase A Data-Only Validation (PASS WITH WARNINGS)
 LATEST COMMIT:          44d090f
 TEST STATUS:            339 passed; ruff check/format clean; mypy clean (48 files)
-BLOCKER:                None
-NEXT ACTION:            Attach MQL5 bridge to HFM Cent XAUUSDc; start collector
-                        tailer; verify first JSONL → SQLite → reconciliation cycle.
+BLOCKER:                None (Cent env verification ISP-blocked — §8)
+NEXT ACTION:            Build benchmark dataset + runner; live benchmark run;
+                        comparison + recommendation; final report.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
+
+## 16. CURRENT WORK LOG
+
+Append-only log of important benchmark milestones. Old entries are never rewritten.
+
+| Time | Milestone | Status | Evidence | Notes |
+| ---- | --------- | ------ | -------- | ----- |
+| 2026-08-14 21:08 +07 | Benchmark kickoff | DONE | this entry | shortlist 8 models fixed; live tracking established; no model final yet |
+| 2026-08-14 21:08 +07 | Benchmark design | IN PROGRESS | — | spec/dataset/runner pending in `docs/validation/ai-benchmark/` |
