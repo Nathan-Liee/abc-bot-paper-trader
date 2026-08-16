@@ -278,7 +278,7 @@ CURRENT PHASE:          RISK ENGINE GATE
 CURRENT MILESTONE:      Risk Engine Gate (COMPLETE — implemented + validated,
                         PASS WITH PENDING CONFIGURATION)
 LAST COMPLETED MILESTONE: Risk Engine Gate — implementation + 20 tests + validation report (2026-08-17)
-LATEST COMMIT:          <new> (feat(risk): implement system risk gate)
+LATEST COMMIT:          048bfcb (feat(risk): implement system risk gate)
 TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
 NEXT ACTION:            Next milestone (separate task): Lot Sizing / Exposure / Margin
