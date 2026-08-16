@@ -52,7 +52,7 @@ verdict `INVENTORY COMPLETE`, `benchmark-spec.md` v1.0.0, `tests/benchmark/`
 - CI Baseline = GREEN (GitHub Actions all steps success, run on `0a30071`)
 - AI Benchmark Execution = COMPLETE (396/396 requests; raw `results/raw/*.jsonl` + normalized/scored `results/normalized/`; run window 2026-08-15 00:40–01:14 +07)
 - AI Benchmark Evaluation = COMPLETE (`benchmark-report.md`; results re-verified, ranking + recommendation produced)
-- AI Model Selection = PENDING APPROVAL (recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`; NO final selection made)
+- AI Model Selection = READY FOR APPROVAL (exact IDs verified vs endpoint 2026-08-17; recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`; awaiting human approval — no final selection made)
 
 Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 11 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
@@ -75,7 +75,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
 | Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
 | AI Model Benchmark | ✅ COMPLETE | 11 candidates (inventory-report.md §11); spec v1.0.0 + dataset 12 scenarios + runner + 22 fail-closed tests; execution 396/396 (2026-08-15 00:40–01:14 +07); normalization + evaluation done; report `docs/validation/ai-benchmark/benchmark-report.md` | `aab70e5` + worktree |
-| AI Selection | ⏳ PENDING APPROVAL | report §20: primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; no final selection without approval | `benchmark-report.md` |
+| AI Selection | ⏳ READY FOR APPROVAL | report §20: primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; exact IDs verified via `GET /v1/models` (HTTP 200, 2026-08-17); no final selection without approval | `benchmark-report.md` |
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
 | AI Decision Engine | ⏳ PENDING | — | — |
@@ -118,10 +118,12 @@ DO NOT:         select final model; touch contract/schema/risk/execution/exit
 EXECUTION STATUS:      COMPLETE — benchmark executed 396/396, results re-verified,
                         evaluation report written (`benchmark-report.md`), validation
                         green (360 tests / ruff / mypy), commit pending.
-AI SELECTION:          PENDING APPROVAL — recommended: primary
+AI SELECTION:          READY FOR APPROVAL — recommended: primary
                         `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary
                         `groq/llama-3.3-70b-versatile`, fallback
-                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20).
+                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20);
+                        exact IDs verified via `GET /v1/models` (HTTP 200, 2026-08-17;
+                        router now `10.197.141.202:20128`). Awaiting human approval.
 ```
 
 ## 6. Completed Work
@@ -288,9 +290,10 @@ LAST COMPLETED MILESTONE: AI Benchmark Evaluation — report + ranking + recomme
 LATEST COMMIT:          944a87a (worktree uncommitted: runner 429-retry + 11 models, results/, report, AGENTS.md)
 TEST STATUS:            360 passed; ruff check/format clean; mypy clean (48 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            Human approval of recommended primary AI model (report §20);
-                        then implement AI Decision Engine (separate task);
-                        Phase A Data Collection remains next actionable pipeline item.
+NEXT ACTION:            USER APPROVAL GATE — approve Primary/Secondary/Fallback
+                        (report §20); then implement AI Decision Engine (separate
+                        task); Phase A Data Collection remains next actionable
+                        pipeline item.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -317,3 +320,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-15 +07 | AI Benchmark Evaluation | COMPLETE | raw + normalized re-validated: 396/396 records, 0 duplicates, 0 missing combos, 0 malformed, timestamps monotonic; independent recompute of all metrics + scores = 0 diffs vs stored | 360 OK / 31 HTTP400 / 5 TRANSPORT_ERROR (all glm-4.7-flash); 0 timeouts, 0 aborted; hard-fails: glm-4.7-flash, llama-3.2-1b; failsafe rate 1.0 for all models; safety violations 0. |
 | 2026-08-15 +07 | AI Benchmark Report | COMPLETE | `docs/validation/ai-benchmark/benchmark-report.md` (21 sections) | Benchmark winner groq/llama-3.3-70b-versatile 0.9903; operational winner + recommended primary cf/llama-3.1-8b-instruct-fp8-fast 0.9901 (p95 777 ms, std 0.0); secondary groq 70b; fallback cf/qwen2.5-coder-32b; cost: only kgw free-tier verified (3 routes), 8 models COST_UNKNOWN. Final model selection PENDING APPROVAL. |
 | 2026-08-15 +07 | Validation suite | COMPLETE | pytest 360 passed (40.9 s); ruff check . clean; ruff format --check . clean (98 files); mypy collector shared clean (48 files) | No source changes required; all green before commit. |
+| 2026-08-17 +07 | AI Model Selection Gate — ID verification | COMPLETE (READY FOR APPROVAL) | read-only `GET /v1/models` HTTP 200 @ `10.197.141.202:20128` (old `10.139.136.202` timed out) | Exact IDs verified present: `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, `groq/llama-3.3-70b-versatile`, `cf/@cf/qwen/qwen2.5-coder-32b-instruct`, + rest of shortlist. Discrepancy resolved: `cf/llama-3.1-8b-fp8-fast` = shorthand ONLY, NOT a valid endpoint ID — implementation must use full route ID (raw benchmark records already store it). `benchmark-report.md` clarified (Exact ID note §4 + §20 status READY FOR APPROVAL). AI selection NOT approved — human approval next. |

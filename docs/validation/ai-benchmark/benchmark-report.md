@@ -60,6 +60,8 @@ Specification NOT modified.
 
 Excluded (inventory §12): `Yall`/`code` aliases, `cx/*`, paid `kgw/kilo-auto/frontier|balanced` (HTTP402), `kgw/kwaipilot/kat-coder-pro-v2.5:free` (HTTP404), all `oc/*`. Candidate list NOT modified.
 
+**Exact ID note (verified 2026-08-17, read-only `GET /v1/models` HTTP 200):** short labels in the tables below (e.g. `cf/llama-3.1-8b-fp8-fast`, `cf/llama-3.3-70b-fp8-fast`, `cf/qwen2.5-coder-32b`) are shorthand used in this report and in inventory-report.md §3 family lists. The endpoint does NOT accept them. The exact, implementation-valid identifiers are the full route IDs (raw benchmark records store these in the `model` field). Verified present on the endpoint: `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast` ✓, `groq/llama-3.3-70b-versatile` ✓, `cf/@cf/qwen/qwen2.5-coder-32b-instruct` ✓, `cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast` ✓, `cf/@cf/zai-org/glm-4.7-flash` ✓, `cf/@cf/meta/llama-3.2-1b-instruct` ✓, `ollama/gpt-oss:120b` ✓, `groq/openai/gpt-oss-120b` ✓, `kgw/*` free routes ✓. Endpoint reachable at `http://10.197.141.202:20128/v1` on 2026-08-17 (previous `10.139.136.202` timed out; model inventory unchanged for all shortlisted/recommended models).
+
 ## 5. Dataset & Scenarios
 
 `dataset.json` — 12 scenarios (OBSERVED): s01 low_volatility_flat, s02 normal_volatility_range, s03 high_volatility_news (spread widened), s04 spread_normal, s05 spread_widened, s06 bullish_momentum (M1+M5), s07 bearish_momentum (M1+M5), s08 m1m5_aligned_bullish, s09 m1m5_aligned_bearish, s10 m1m5_conflicting (fail-safe: NO-TRADE), s11 ambiguous_no_trade (fail-safe), s12 insufficient_context (fail-safe). Each scenario carries symbol/timestamps/bid/ask/spread/mid/ATR M1/M5/summaries/derived features; s12 has `atr_m5: null` (insufficient context). Dataset NOT modified.
@@ -253,7 +255,7 @@ All failures recorded verbatim in raw (status/error fields); none overwritten (O
 - Secondary: `groq/llama-3.3-70b-versatile`
 - Fallback: `cf/@cf/qwen/qwen2.5-coder-32b-instruct`
 
-Approval requirements before final: (1) cost verification for cf/groq routes, (2) confirmation of <2 s latency target, (3) scoring-weight sign-off (PROVISIONAL), (4) end-to-end re-verify with production prompt. Hard-fail candidates are excluded by spec §11.
+Exact IDs verified against `GET /v1/models` (2026-08-17, read-only, HTTP 200). Model selection status: READY FOR APPROVAL. Approval requirements before final: (1) cost verification for cf/groq routes, (2) confirmation of <2 s latency target, (3) scoring-weight sign-off (PROVISIONAL), (4) end-to-end re-verify with production prompt. Hard-fail candidates are excluded by spec §11.
 
 ## 21. Next Action
 
