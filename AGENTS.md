@@ -52,7 +52,8 @@ verdict `INVENTORY COMPLETE`, `benchmark-spec.md` v1.0.0, `tests/benchmark/`
 - CI Baseline = GREEN (GitHub Actions all steps success, run on `0a30071`)
 - AI Benchmark Execution = COMPLETE (396/396 requests; raw `results/raw/*.jsonl` + normalized/scored `results/normalized/`; run window 2026-08-15 00:40–01:14 +07)
 - AI Benchmark Evaluation = COMPLETE (`benchmark-report.md`; results re-verified, ranking + recommendation produced)
-- AI Model Selection = READY FOR APPROVAL (exact IDs verified vs endpoint 2026-08-17; recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`; awaiting human approval — no final selection made)
+- AI Model Selection = APPROVED (user approved config in AI Decision Engine task 2026-08-17; locked: primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; exact IDs verified vs endpoint)
+- AI Decision Engine = COMPLETE (implemented `ai_decision/`; 71 new tests; validation report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`; live smoke PASS 2026-08-17 — BUY 0.8 @ 1032 ms)
 
 Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 11 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
@@ -75,10 +76,10 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
 | Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
 | AI Model Benchmark | ✅ COMPLETE | 11 candidates (inventory-report.md §11); spec v1.0.0 + dataset 12 scenarios + runner + 22 fail-closed tests; execution 396/396 (2026-08-15 00:40–01:14 +07); normalization + evaluation done; report `docs/validation/ai-benchmark/benchmark-report.md` | `aab70e5` + worktree |
-| AI Selection | ⏳ READY FOR APPROVAL | report §20: primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; exact IDs verified via `GET /v1/models` (HTTP 200, 2026-08-17); no final selection without approval | `benchmark-report.md` |
+| AI Selection | ✅ APPROVED | user-approved config (engine task 2026-08-17): primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; exact IDs verified via `GET /v1/models` (HTTP 200) | `benchmark-report.md` |
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
-| AI Decision Engine | ⏳ PENDING | — | — |
+| AI Decision Engine | ✅ COMPLETE | `ai_decision/` (config/prompt/client/parsing/validation/record/engine/gate); tests 71 (unit+integration, mocked provider); validation report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`; live smoke PASS (BUY 0.8, 1032 ms, 2026-08-17); no MT5/order capability, proposal-only | worktree → commit |
 | Risk Engine | ⏳ PENDING | — | — |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
@@ -118,12 +119,14 @@ DO NOT:         select final model; touch contract/schema/risk/execution/exit
 EXECUTION STATUS:      COMPLETE — benchmark executed 396/396, results re-verified,
                         evaluation report written (`benchmark-report.md`), validation
                         green (360 tests / ruff / mypy), commit pending.
-AI SELECTION:          READY FOR APPROVAL — recommended: primary
+AI SELECTION:          APPROVED (2026-08-17) — primary
                         `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary
                         `groq/llama-3.3-70b-versatile`, fallback
-                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20);
-                        exact IDs verified via `GET /v1/models` (HTTP 200, 2026-08-17;
-                        router now `10.197.141.202:20128`). Awaiting human approval.
+                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20).
+AI DECISION ENGINE:    COMPLETE — `ai_decision/` implemented, 71 tests + full
+                        suite green (431 pytest / ruff / mypy 57 files), live
+                        smoke PASS, validation report written. Proposal-only;
+                        SystemGate boundary interface; Risk Engine NOT built.
 ```
 
 ## 6. Completed Work
@@ -141,6 +144,7 @@ AI SELECTION:          READY FOR APPROVAL — recommended: primary
 11. **AI Model Discovery + Inventory + Benchmark Spec + Runner** — 57 models via `GET /v1/models`; inventory report verdict `INVENTORY COMPLETE`, 11 benchmark candidates (free/paid verified by probe); spec v1.0.0; runner + 20 fail-closed tests. Commit `aab70e5`. Validated: `docs/validation/ai-benchmark/inventory-report.md`, `benchmark-spec.md`, `tests/benchmark/`.
 12. **AI Benchmark Execution + Normalization** — 11 models × 12 scenarios × 3 repeats = 396 requests against `http://10.139.136.202:20128/v1` (run window 2026-08-15 00:40–01:14 +07; results uncommitted). Validated: raw 396/396 lines with real endpoint payloads, unique (model,scenario,repeat) 396/396, per-model coverage 36/36; normalized `results/normalized/metrics.json` + `results.json` (396 entries); hard-fail: `cf/@cf/zai-org/glm-4.7-flash` (0/36 OK — 31 HTTP400 + 5 TRANSPORT_ERROR) and `cf/@cf/meta/llama-3.2-1b-instruct` (schema_valid_rate 0.2778). No final model selected.
 13. **AI Benchmark Evaluation + Final Report** — independent recomputation of all metrics and scores matches stored normalized results (0 diffs across 11 models); `benchmark-report.md` written (21 sections). Benchmark winner `groq/llama-3.3-70b-versatile` (0.9903); operational winner / recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast` (0.9901, p95 777 ms, confidence std 0.0); secondary `groq/llama-3.3-70b-versatile`; fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`. Validation GREEN: 360 tests pass, ruff check/format clean, mypy clean (48 files). Final model selection STILL PENDING APPROVAL — nothing implemented.
+14. **AI Decision Engine Implementation** — `ai_decision/` package (config/prompt/client/parsing/validation/record/engine/gate) with exact approved model IDs, deterministic fallback PRIMARY→SECONDARY→FALLBACK→NO-TRADE (bounded retry), strict schema/authority validation, fail-closed on all failure classes, observability (inference_id/model/latency/fallback/errors), SystemGate boundary interface only. Found + handled live router quirk: body + trailing `data: [DONE]`. 71 new tests (parsing/validation/engine/integration, mocked provider); full suite 431 PASS; ruff/format clean; mypy clean (57 files); live smoke PASS `BUY 0.8 @ 1032 ms` (2026-08-17). Report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`. Risk Engine / Execution / EA NOT implemented.
 
 ## 7. Pending Work (dependency order)
 
@@ -283,17 +287,17 @@ Every time a task completes, the agent MUST update this document:
 ## 15. Handoff Snapshot
 
 ```
-LAST VERIFIED:          2026-08-15 +07:00
-CURRENT PHASE:          AI MODEL BENCHMARK
-CURRENT MILESTONE:      AI Benchmark Evaluation (COMPLETE — report written; approval pending)
-LAST COMPLETED MILESTONE: AI Benchmark Evaluation — report + ranking + recommendation (2026-08-15)
-LATEST COMMIT:          944a87a (worktree uncommitted: runner 429-retry + 11 models, results/, report, AGENTS.md)
-TEST STATUS:            360 passed; ruff check/format clean; mypy clean (48 files)
+LAST VERIFIED:          2026-08-17 +07:00
+CURRENT PHASE:          AI DECISION ENGINE
+CURRENT MILESTONE:      AI Decision Engine (COMPLETE — implemented + validated)
+LAST COMPLETED MILESTONE: AI Decision Engine — implementation + 71 tests + live smoke (2026-08-17)
+LATEST COMMIT:          3519b0c (worktree: ai_decision/ + tests + report + AGENTS.md)
+TEST STATUS:            431 passed; ruff check/format clean; mypy clean (57 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            USER APPROVAL GATE — approve Primary/Secondary/Fallback
-                        (report §20); then implement AI Decision Engine (separate
-                        task); Phase A Data Collection remains next actionable
-                        pipeline item.
+NEXT ACTION:            Next milestone (separate task): Risk Engine gate
+                        (system approval: lot/risk/SL/exposure authority), then
+                        EA/execution integration. AI Decision Engine is
+                        proposal-only; do NOT implement Risk/Execution/EA here.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -321,3 +325,8 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-15 +07 | AI Benchmark Report | COMPLETE | `docs/validation/ai-benchmark/benchmark-report.md` (21 sections) | Benchmark winner groq/llama-3.3-70b-versatile 0.9903; operational winner + recommended primary cf/llama-3.1-8b-instruct-fp8-fast 0.9901 (p95 777 ms, std 0.0); secondary groq 70b; fallback cf/qwen2.5-coder-32b; cost: only kgw free-tier verified (3 routes), 8 models COST_UNKNOWN. Final model selection PENDING APPROVAL. |
 | 2026-08-15 +07 | Validation suite | COMPLETE | pytest 360 passed (40.9 s); ruff check . clean; ruff format --check . clean (98 files); mypy collector shared clean (48 files) | No source changes required; all green before commit. |
 | 2026-08-17 +07 | AI Model Selection Gate — ID verification | COMPLETE (READY FOR APPROVAL) | read-only `GET /v1/models` HTTP 200 @ `10.197.141.202:20128` (old `10.139.136.202` timed out) | Exact IDs verified present: `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, `groq/llama-3.3-70b-versatile`, `cf/@cf/qwen/qwen2.5-coder-32b-instruct`, + rest of shortlist. Discrepancy resolved: `cf/llama-3.1-8b-fp8-fast` = shorthand ONLY, NOT a valid endpoint ID — implementation must use full route ID (raw benchmark records already store it). `benchmark-report.md` clarified (Exact ID note §4 + §20 status READY FOR APPROVAL). AI selection NOT approved — human approval next. |
+| 2026-08-17 +07 | AI Model Selection | APPROVED | user-approved locked config in AI Decision Engine task | PRIMARY `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, SECONDARY `groq/llama-3.3-70b-versatile`, FALLBACK `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; exact IDs verified. |
+| 2026-08-17 +07 | AI Decision Engine — implementation started | IN PROGRESS | `ai_decision/` planning | authority boundary, deterministic parsing, timeouts per spec v1.0.0, bounded retry/fallback, SystemGate interface-only. |
+| 2026-08-17 +07 | AI Decision Engine — contract validation | COMPLETE | 71 tests green (parsing 19 / validation 13 / engine 34 / integration 5) | strict schema (confidence 0..1 reject not clamp; reason string), authority violations fail-closed, fail-safe aliases → NO-TRADE. |
+| 2026-08-17 +07 | AI Decision Engine — live smoke | COMPLETE | single non-trading call: PRIMARY returned BUY 0.8 @ 1032 ms, validation_ok=True | Found live router quirk: JSON body + trailing `data: [DONE]` (no newline) — parser now strips SSE tail; regression tests added. No benchmark rerun. |
+| 2026-08-17 +07 | AI Decision Engine — acceptance | COMPLETE | full suite 431 passed; ruff check/format clean; mypy clean (57 files); report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md` | Acceptance criteria met (14/14); no MT5/order capability; no Risk/Execution/EA implemented. |
