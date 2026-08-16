@@ -37,8 +37,8 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    RISK ENGINE GATE
-CURRENT MILESTONE: Risk Engine Gate (IN PROGRESS)
+CURRENT PHASE:    RISK CONFIGURATION FINALIZATION
+CURRENT MILESTONE: Risk Configuration Finalization — evaluation COMPLETE, numeric thresholds HUMAN APPROVAL REQUIRED
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -80,7 +80,8 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
 | AI Decision Engine | ✅ COMPLETE | `ai_decision/` (config/prompt/client/parsing/validation/record/engine/gate); tests 71 (unit+integration, mocked provider); validation report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`; live smoke PASS (BUY 0.8, 1032 ms, 2026-08-17); no MT5/order capability, proposal-only | worktree → commit |
-| Risk Engine | ✅ COMPLETE | `risk_engine/` (models/config/calculators/validators/engine/gate/reason_codes); tests 20 (unit+integration); validation report `docs/validation/risk-engine/risk-engine-validation.md`; verdict PASS WITH PENDING CONFIGURATION; no broker execution | commit |
+| Risk Engine | ✅ COMPLETE | `risk_engine/` (models/config/calculators/validators/engine/gate/reason_codes); tests 20 (unit+integration); validation report `docs/validation/risk-engine/risk-engine-validation.md`; verdict PASS WITH PENDING CONFIGURATION; no broker execution | `048bfcb` |
+| Risk Configuration Finalization | ⏳ BLOCKED (evaluation complete) | audit + decision matrix + report `docs/validation/risk-engine/risk-config-finalization.md`; verdict PASS WITH HUMAN APPROVAL REQUIRED; 8 owner decisions pending; no numeric config locked | docs-only |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
 | Execution Engine | ⏳ PENDING | — | — |
@@ -95,24 +96,21 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Risk Engine Gate Implementation
-OBJECTIVE:      Implement Risk Engine Gate as System authority following AI
-                Decision Engine. Consumes AI proposal, account state, market
-                state, and symbol specifications; computes risk/lot/SL/exposure;
-                enforces fail-closed safety and deterministic APPROVE/REJECT.
-                No broker execution in this task.
-DO NOT:         Implement EA/OrderSend; hardcode Cent/XAUUSDc economics;
-                take Premium/XAUUSD as target economics; bypass System authority;
-                allow AI to control lot/risk/SL.
-EXECUTION STATUS:      COMPLETED — `risk_engine/` implemented + 20 new tests
-                        (unit + integration with ai_decision), full suite 449
-                        PASS, ruff check/format clean, mypy clean (65 files),
-                        validation report written
-                        (`docs/validation/risk-engine/risk-engine-validation.md`),
-                        verdict PASS WITH PENDING CONFIGURATION.
-PENDING CONFIG:        risk_pct_per_trade 1.0 default; SL distance 2.0 default;
-                        max exposure/drawdown/spread/margin buffer — all safe
-                        baseline defaults, human lock required before live use.
+CURRENT TASK:   Risk Configuration Finalization — evaluation
+OBJECTIVE:      Finalize all previously PENDING CONFIGURATION risk parameters
+                using Obsidian evidence + implementation + target HFM
+                Cent/XAUUSDc. Verdict: evidence locks the MECHANISMS and
+                defaults; numeric thresholds are HUMAN APPROVAL REQUIRED
+                (Obsidian marks Risk % / Max DD / Max Exposure / Max Lot /
+                formula / spread / SL as PENDING DECISION).
+DO NOT:         Lock numeric thresholds unilaterally; commit config as final;
+                implement Execution/EA; use Premium/XAUUSD economics as final.
+EXECUTION STATUS:      COMPLETE — audit + decision matrix + report written
+                        (`docs/validation/risk-engine/risk-config-finalization.md`).
+                        Config defaults remain PROVISIONAL until the 8 owner
+                        decisions in the report are approved.
+NEXT:           Human approvals -> update RiskConfig -> `feat(risk): finalize
+                risk configuration` -> unlock Lot/Execution design.
 ```
 
 ## 6. Completed Work
@@ -274,17 +272,22 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          RISK ENGINE GATE
-CURRENT MILESTONE:      Risk Engine Gate (COMPLETE — implemented + validated,
-                        PASS WITH PENDING CONFIGURATION)
-LAST COMPLETED MILESTONE: Risk Engine Gate — implementation + 20 tests + validation report (2026-08-17)
-LATEST COMMIT:          048bfcb (feat(risk): implement system risk gate)
+CURRENT PHASE:          RISK CONFIGURATION FINALIZATION
+CURRENT MILESTONE:      Risk Configuration Finalization — evaluation COMPLETE;
+                        numeric thresholds HUMAN APPROVAL REQUIRED (no config locked)
+LAST COMPLETED MILESTONE: Risk Configuration Finalization — audit + decision matrix +
+                        report `docs/validation/risk-engine/risk-config-finalization.md` (2026-08-17)
+LATEST COMMIT:          0ded5ce (docs(agent): update handoff snapshot for risk engine gate)
 TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
-BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            Next milestone (separate task): Lot Sizing / Exposure / Margin
-                        finalization (human-lock risk thresholds), then Execution
-                        Engine + EA integration. Risk Engine gate is approval-only,
-                        proposal-plumbing; do NOT implement Execution/EA here.
+BLOCKER:                8 owner decisions required (risk %, SL, max exposure,
+                        max drawdown+window, max spread, margin buffer+leverage,
+                        cost treatment, compounding ratio); HFM Cent XAUUSDc
+                        economics unavailable (ISP-blocked — §8)
+NEXT ACTION:            Human approves the 8 pending numeric/config decisions in
+                        `risk-config-finalization.md` → agent updates `RiskConfig`
+                        defaults + tests → commit `feat(risk): finalize risk
+                        configuration` → unlock Lot/Execution design. No live
+                        use of PROVISIONAL defaults.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -320,3 +323,5 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | Risk Engine Gate — implementation | COMPLETE | `risk_engine/` package (models/config/calculators/validators/engine/gate/reason_codes) + 20 tests (18 unit + 2 integration with ai_decision) | System-owned approval gate consuming AI proposals; deterministic SL→lot→risk/exposure chain; fail-closed REJECT on any uncertainty; zero broker/MT5 capability. |
 | 2026-08-17 +07 | Risk Engine Gate — validation | COMPLETE | full suite 449 passed; ruff check/format clean; mypy clean (65 files); report `docs/validation/risk-engine/risk-engine-validation.md` | Verdict PASS WITH PENDING CONFIGURATION. Pending human locks: risk % per trade (1.0 default), SL distance (2.0 default), exposure/drawdown/spread/margin buffers, sizing formula. |
 | 2026-08-17 +07 | Risk Engine Gate — acceptance | COMPLETE | commit `feat(risk): implement system risk gate`; main pushed | Acceptance met: AI never determines lot/risk/SL; System APPROVE/REJECT; deterministic math; margin/exposure/spread validated; no broker execution. |
+| 2026-08-17 +07 | Risk Config Finalization — evaluation | COMPLETE | audit + decision matrix + report `docs/validation/risk-engine/risk-config-finalization.md`; 449 tests green, ruff/mypy clean | Verdict PASS WITH HUMAN APPROVAL REQUIRED. Obsidian marks all numeric risk thresholds PENDING DECISION → no config locked. LOCKED mechanisms: risk basis EQUITY, %-of-equity risk-budget lot formula, floor rounding, risk≤budget enforcement, fail-closed state handling, SL=loss-protection, ABC exit preserved. |
+| 2026-08-17 +07 | Risk Config Finalization — approvals | BLOCKED | 8 owner decisions pending (risk %, SL, max exposure, max drawdown+window, max spread, margin buffer+leverage, cost treatment, compounding ratio) | Per task rule §29/§44: no unilateral numeric locking; commit docs-only. |
