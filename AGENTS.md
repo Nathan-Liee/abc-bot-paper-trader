@@ -37,9 +37,8 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    RISK CONFIGURATION FINALIZATION
-CURRENT MILESTONE: Risk Configuration Finalization — runtime evidence collected
-                   (HFM Cent XAUUSDc READ-ONLY); SL/spread/margin/leverage pending owner
+CURRENT PHASE:    RISK PARAMETER EVALUATION
+CURRENT MILESTONE: Risk Parameter Evaluation — COMPLETE; owner selects profile/values
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -84,6 +83,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Risk Engine | ✅ COMPLETE | `risk_engine/` (models/config/calculators/validators/engine/gate/reason_codes); tests 20 (unit+integration); validation report `docs/validation/risk-engine/risk-engine-validation.md`; verdict PASS WITH PENDING CONFIGURATION; no broker execution | `048bfcb` |
 | Risk Configuration Finalization | ⏳ BLOCKED (evaluation complete) | audit + decision matrix + report `docs/validation/risk-engine/risk-config-finalization.md`; verdict PASS WITH HUMAN APPROVAL REQUIRED; 8 owner decisions pending; no numeric config locked | docs-only |
 | HFM Cent XAUUSDc Runtime Evidence | ✅ COMPLETE | read-only IPC (`MetaTrader5` python) on account 229105805 / HFMarketsGlobal-Live19, symbol XAUUSDc; 61 spread samples (median 36pts), exact symbol spec/account/margin/leverage; report `docs/validation/runtime/xauusdc-cent-readonly-observation.md`; zero execution | docs-only |
+| Risk Parameter Evaluation | ✅ COMPLETE (approval pending) | decision matrix + SL/spread/exposure/margin sensitivity + 3 profiles in `docs/validation/risk-engine/risk-parameter-evaluation.md`; no config locked | docs-only |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
 | Execution Engine | ⏳ PENDING | — | — |
@@ -98,27 +98,26 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Read-Only HFM Cent XAUUSDc Runtime Discovery
-OBJECTIVE:      Collect actual runtime evidence from MT5 (HFM Cent REAL,
-                XAUUSDc, live market) READ-ONLY to validate broker/symbol
-                mechanics and inform Risk Config finalization. No execution.
-DO NOT:         OrderSend/OrderModify/Position*/pending/SL/TP/leverage/symbol
-                settings mutation; run strategy/AI/benchmark; paper trade;
-                set final config values automatically.
-EXECUTION STATUS:      COMPLETED — read-only IPC observation (MetaTrader5 python
-                       5.0.6090, account 229105805 HFMarketsGlobal-Live19,
-                       symbol XAUUSDc). 61 spread samples, exact symbol spec +
-                       account state + margin/leverage + lot/tick mechanics
-                       recorded. Report `docs/validation/runtime/
-                       xauusdc-cent-readonly-observation.md`.
-LOCKS (owner):         risk_basis=EQUITY; risk/trade=0.5%; max positions=1;
-                       max drawdown=5.0%. NOT modified by observation.
-LOCKED SO FAR:         basis/risk%/positions/drawdown (owner), ABC exit,
-                       AI authority, mechanisms. 
-PENDING (evidence now): SL distance (broker min 0, eco min ~36pts spread),
-                       max spread (observed median 36pts), margin buffer,
-                       leverage fallback (actual 2000:1), max exposure,
-                       slippage/commission treatment.
+CURRENT TASK:   Risk Parameter Evaluation from Live XAUUSDc Evidence
+OBJECTIVE:      Evaluate pending RiskConfig parameters (SL distance, max spread,
+                max exposure, margin buffer, slippage/commission, compounding)
+                against real HFM Cent XAUUSDc runtime evidence. Deliver decision
+                matrix + sensitivity tables + 3 profiles (Conservative/Balanced/
+                Strict). NO final locking without human approval.
+DO NOT:         Lock config; implement execution; place/modify orders; use real
+                balance as policy basis; claim paper validation where none exists.
+EXECUTION STATUS:      COMPLETE — report `docs/validation/risk-engine/
+                        risk-parameter-evaluation.md`. Key findings: SL 2.0pt
+                        economically invalid (< spread ~36pts); economically
+                        valid SL (40–72pt) needs equity ≥ 8,000–14,400 USC for a
+                        single 0.01 lot at 0.5%; max spread candidates 36–50pt
+                        all accept observed window; leverage observed 2000:1;
+                        cost treatment NEEDS PAPER VALIDATION.
+LOCKS (owner):         basis EQUITY; risk/trade 0.5%; max positions 1;
+                       max drawdown 5.0%. Unchanged.
+NEXT:           Owner selects profile or per-item values (report §10/§13) ->
+                agent applies to RiskConfig + tests -> `feat(risk): finalize
+                risk configuration`.
 ```
 
 ## 6. Completed Work
@@ -280,23 +279,22 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          RISK CONFIGURATION FINALIZATION
-CURRENT MILESTONE:      Risk Configuration Finalization — runtime evidence
-                        collected (HFM Cent XAUUSDc READ-ONLY, 2026-08-17)
-LAST COMPLETED MILESTONE: HFM Cent XAUUSDc Read-Only Runtime Discovery — account
-                        + symbol + 61 spread samples + mechanics; report
-                        `docs/validation/runtime/xauusdc-cent-readonly-observation.md`
-LATEST COMMIT:          a73cadf (docs(validation): record hfm cent xauusdc runtime evidence)
+CURRENT PHASE:          RISK PARAMETER EVALUATION
+CURRENT MILESTONE:      Risk Parameter Evaluation — COMPLETE; owner selects profile/values
+LAST COMPLETED MILESTONE: Risk Parameter Evaluation — decision matrix + sensitivity +
+                        3 profiles on live XAUUSDc evidence;
+                        report `docs/validation/risk-engine/risk-parameter-evaluation.md`
+LATEST COMMIT:          <evaluation commit> (docs(risk): evaluate runtime risk parameters)
 TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
-BLOCKER:                owner decisions on SL distance (eco min ~36pts spread),
-                        max spread (observed median 36pts), margin buffer,
-                        leverage fallback (actual 2000:1), max exposure,
-                        cost treatment — then RiskConfig update.
-NEXT ACTION:            Owner approves pending configs (guided by runtime report)
-                        -> update RiskConfig + tests -> `feat(risk): finalize risk
+BLOCKER:                owner decisions (SL, max spread, exposure policy, margin
+                        buffer, leverage handling, cost treatment) — report §13;
+                        no config locked.
+NEXT ACTION:            Owner selects profile (Conservative/Balanced/Strict) or
+                        per-item values from report §10/§13 -> agent updates
+                        RiskConfig + tests -> `feat(risk): finalize risk
                         configuration` -> Lot/Execution design. LOCKED per owner:
                         basis EQUITY, risk/trade 0.5%, max positions 1,
-                        max drawdown 5.0%. No auto-locking performed.
+                        max drawdown 5.0%.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -335,3 +333,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | Risk Config Finalization — evaluation | COMPLETE | audit + decision matrix + report `docs/validation/risk-engine/risk-config-finalization.md`; 449 tests green, ruff/mypy clean | Verdict PASS WITH HUMAN APPROVAL REQUIRED. Obsidian marks all numeric risk thresholds PENDING DECISION → no config locked. LOCKED mechanisms: risk basis EQUITY, %-of-equity risk-budget lot formula, floor rounding, risk≤budget enforcement, fail-closed state handling, SL=loss-protection, ABC exit preserved. |
 | 2026-08-17 +07 | Risk Config Finalization — approvals | BLOCKED | 8 owner decisions pending (risk %, SL, max exposure, max drawdown+window, max spread, margin buffer+leverage, cost treatment, compounding ratio) | Per task rule §29/§44: no unilateral numeric locking; commit docs-only. |
 | 2026-08-17 +07 | HFM Cent XAUUSDc Read-Only Runtime Discovery | COMPLETE | read-only MT5 IPC (MetaTrader5 5.0.6090), account 229105805 / HFMarketsGlobal-Live19, symbol XAUUSDc; account/symbol/margin captured; 61 spread samples (min 34 / median 36 / max 36 pts); lot/tick/SL mechanics; report `docs/validation/runtime/xauusdc-cent-readonly-observation.md`; zero execution | Owner-locked already: basis EQUITY, risk/trade 0.5%, max positions 1, max drawdown 5%. New evidence for pending: leverage fallback 2000:1, spread ~36 pts (provisional SL 2.0 < spread → econ-invalid), exposure notional ~4370 USC/lot. No config auto-locked. |
+| 2026-08-17 +07 | Risk Parameter Evaluation | COMPLETE | decision matrix + SL sensitivity + spread/exposure/margin options + 3 profiles; report `docs/validation/risk-engine/risk-parameter-evaluation.md`; 449 tests green | READY FOR HUMAN APPROVAL. Finding: SL 2.0pt invalid (spread 36pt); econ-valid SL 40–72pt needs equity 8,000–14,400 USC for 0.01 lot @ 0.5%; spread candidates 36–50pt accept observed window; leverage observed 2000; cost treatment NEEDS PAPER VALIDATION. No config locked. |
