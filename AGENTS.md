@@ -37,8 +37,8 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    AI MODEL BENCHMARK
-CURRENT MILESTONE: AI Benchmark Execution
+CURRENT PHASE:    RISK ENGINE GATE
+CURRENT MILESTONE: Risk Engine Gate (IN PROGRESS)
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -80,7 +80,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
 | AI Decision Engine | ✅ COMPLETE | `ai_decision/` (config/prompt/client/parsing/validation/record/engine/gate); tests 71 (unit+integration, mocked provider); validation report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`; live smoke PASS (BUY 0.8, 1032 ms, 2026-08-17); no MT5/order capability, proposal-only | worktree → commit |
-| Risk Engine | ⏳ PENDING | — | — |
+| Risk Engine | ✅ COMPLETE | `risk_engine/` (models/config/calculators/validators/engine/gate/reason_codes); tests 20 (unit+integration); validation report `docs/validation/risk-engine/risk-engine-validation.md`; verdict PASS WITH PENDING CONFIGURATION; no broker execution | commit |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
 | Execution Engine | ⏳ PENDING | — | — |
@@ -95,38 +95,24 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   AI Benchmark Execution — live run (not yet executed)
-OBJECTIVE:      Reproducible benchmark of 11 shortlist models on custom
-                endpoint http://10.139.136.202:20128/v1 — identical dataset +
-                prompt per model; measure latency (P50/P95/P99),
-                structured-output reliability, consistency, context fidelity,
-                failure safety.
-SHORTLIST (11, per inventory-report.md §11 + benchmark-spec.md §3):
-                groq/llama-3.3-70b-versatile
-                cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast
-                groq/openai/gpt-oss-120b
-                cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast
-                cf/@cf/zai-org/glm-4.7-flash
-                cf/@cf/qwen/qwen2.5-coder-32b-instruct
-                ollama/gpt-oss:120b
-                cf/@cf/meta/llama-3.2-1b-instruct (fallback/ultra-fast)
-                kgw/nvidia/nemotron-3-super-120b-a12b:free
-                kgw/nvidia/nemotron-3-ultra-550b-a55b:free
-                kgw/kilo-auto/free (prompt-mode JSON; non-stream)
-DO NOT:         select final model; touch contract/schema/risk/execution/exit
-                authority; use cx/* as primary (quota-unstable); modify locked
-                architecture; touch HFM Cent/XAUUSDc target.
-EXECUTION STATUS:      COMPLETE — benchmark executed 396/396, results re-verified,
-                        evaluation report written (`benchmark-report.md`), validation
-                        green (360 tests / ruff / mypy), commit pending.
-AI SELECTION:          APPROVED (2026-08-17) — primary
-                        `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary
-                        `groq/llama-3.3-70b-versatile`, fallback
-                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20).
-AI DECISION ENGINE:    COMPLETE — `ai_decision/` implemented, 71 tests + full
-                        suite green (431 pytest / ruff / mypy 57 files), live
-                        smoke PASS, validation report written. Proposal-only;
-                        SystemGate boundary interface; Risk Engine NOT built.
+CURRENT TASK:   Risk Engine Gate Implementation
+OBJECTIVE:      Implement Risk Engine Gate as System authority following AI
+                Decision Engine. Consumes AI proposal, account state, market
+                state, and symbol specifications; computes risk/lot/SL/exposure;
+                enforces fail-closed safety and deterministic APPROVE/REJECT.
+                No broker execution in this task.
+DO NOT:         Implement EA/OrderSend; hardcode Cent/XAUUSDc economics;
+                take Premium/XAUUSD as target economics; bypass System authority;
+                allow AI to control lot/risk/SL.
+EXECUTION STATUS:      COMPLETED — `risk_engine/` implemented + 20 new tests
+                        (unit + integration with ai_decision), full suite 449
+                        PASS, ruff check/format clean, mypy clean (65 files),
+                        validation report written
+                        (`docs/validation/risk-engine/risk-engine-validation.md`),
+                        verdict PASS WITH PENDING CONFIGURATION.
+PENDING CONFIG:        risk_pct_per_trade 1.0 default; SL distance 2.0 default;
+                        max exposure/drawdown/spread/margin buffer — all safe
+                        baseline defaults, human lock required before live use.
 ```
 
 ## 6. Completed Work
@@ -288,16 +274,17 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          AI DECISION ENGINE
-CURRENT MILESTONE:      AI Decision Engine (COMPLETE — implemented + validated)
-LAST COMPLETED MILESTONE: AI Decision Engine — implementation + 71 tests + live smoke (2026-08-17)
-LATEST COMMIT:          3519b0c (worktree: ai_decision/ + tests + report + AGENTS.md)
-TEST STATUS:            431 passed; ruff check/format clean; mypy clean (57 files)
+CURRENT PHASE:          RISK ENGINE GATE
+CURRENT MILESTONE:      Risk Engine Gate (COMPLETE — implemented + validated,
+                        PASS WITH PENDING CONFIGURATION)
+LAST COMPLETED MILESTONE: Risk Engine Gate — implementation + 20 tests + validation report (2026-08-17)
+LATEST COMMIT:          <new> (feat(risk): implement system risk gate)
+TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            Next milestone (separate task): Risk Engine gate
-                        (system approval: lot/risk/SL/exposure authority), then
-                        EA/execution integration. AI Decision Engine is
-                        proposal-only; do NOT implement Risk/Execution/EA here.
+NEXT ACTION:            Next milestone (separate task): Lot Sizing / Exposure / Margin
+                        finalization (human-lock risk thresholds), then Execution
+                        Engine + EA integration. Risk Engine gate is approval-only,
+                        proposal-plumbing; do NOT implement Execution/EA here.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -330,3 +317,6 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | AI Decision Engine — contract validation | COMPLETE | 71 tests green (parsing 19 / validation 13 / engine 34 / integration 5) | strict schema (confidence 0..1 reject not clamp; reason string), authority violations fail-closed, fail-safe aliases → NO-TRADE. |
 | 2026-08-17 +07 | AI Decision Engine — live smoke | COMPLETE | single non-trading call: PRIMARY returned BUY 0.8 @ 1032 ms, validation_ok=True | Found live router quirk: JSON body + trailing `data: [DONE]` (no newline) — parser now strips SSE tail; regression tests added. No benchmark rerun. |
 | 2026-08-17 +07 | AI Decision Engine — acceptance | COMPLETE | full suite 431 passed; ruff check/format clean; mypy clean (57 files); report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md` | Acceptance criteria met (14/14); no MT5/order capability; no Risk/Execution/EA implemented. |
+| 2026-08-17 +07 | Risk Engine Gate — implementation | COMPLETE | `risk_engine/` package (models/config/calculators/validators/engine/gate/reason_codes) + 20 tests (18 unit + 2 integration with ai_decision) | System-owned approval gate consuming AI proposals; deterministic SL→lot→risk/exposure chain; fail-closed REJECT on any uncertainty; zero broker/MT5 capability. |
+| 2026-08-17 +07 | Risk Engine Gate — validation | COMPLETE | full suite 449 passed; ruff check/format clean; mypy clean (65 files); report `docs/validation/risk-engine/risk-engine-validation.md` | Verdict PASS WITH PENDING CONFIGURATION. Pending human locks: risk % per trade (1.0 default), SL distance (2.0 default), exposure/drawdown/spread/margin buffers, sizing formula. |
+| 2026-08-17 +07 | Risk Engine Gate — acceptance | COMPLETE | commit `feat(risk): implement system risk gate`; main pushed | Acceptance met: AI never determines lot/risk/SL; System APPROVE/REJECT; deterministic math; margin/exposure/spread validated; no broker execution. |
