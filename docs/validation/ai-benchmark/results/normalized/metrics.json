@@ -1,0 +1,519 @@
+{
+ "benchmark_version": "1.0.0",
+ "dataset_version": "1.0.0",
+ "prompt_version": "v1.0.0",
+ "metrics": {
+  "groq/llama-3.3-70b-versatile": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 555.9,
+    "p95": 1107.1,
+    "p99": 10919.2,
+    "mean": 876.5138888888889
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0118
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 54590,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 606.4,
+    "p95": 776.6,
+    "p99": 2731.3,
+    "mean": 663.9305555555555
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 46470,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "groq/openai/gpt-oss-120b": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 1113.8,
+    "p95": 11877.5,
+    "p99": 13376.2,
+    "mean": 2053.8972222222224
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0039
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 61627,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 1067.1,
+    "p95": 3297.4,
+    "p99": 3915.9,
+    "mean": 1263.8944444444444
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 46277,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "cf/@cf/zai-org/glm-4.7-flash": {
+   "n_ok": 0,
+   "latency_ms": {
+    "p50": NaN,
+    "p95": NaN,
+    "p99": NaN,
+    "mean": NaN
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "parser_repair_rate": 1.0,
+   "fail_closed_error_rate": 1.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 0,
+   "repeats": 3,
+   "hard_fail_reasons": [
+    "schema_valid_rate<0.7"
+   ],
+   "aborted": false
+  },
+  "cf/@cf/qwen/qwen2.5-coder-32b-instruct": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 1252.3,
+    "p95": 1690.4,
+    "p99": 2563.7,
+    "mean": 1316.6833333333334
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 46259,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "ollama/gpt-oss:120b": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 2211.1,
+    "p95": 3006.0,
+    "p99": 3418.8,
+    "mean": 2296.019444444444
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.2222,
+   "schema_valid_rate": 0.7778,
+   "parser_repair_rate": 0.2222,
+   "fail_closed_error_rate": 1.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 0.8889,
+    "confidence_std_mean": 0.1584
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 0,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "cf/@cf/meta/llama-3.2-1b-instruct": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 648.5,
+    "p95": 867.9,
+    "p99": 1889.2,
+    "mean": 697.2638888888889
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.7222,
+   "schema_valid_rate": 0.2778,
+   "parser_repair_rate": 0.7222,
+   "fail_closed_error_rate": 1.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 0.9167,
+    "confidence_std_mean": 0.0943
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 46108,
+   "repeats": 3,
+   "hard_fail_reasons": [
+    "schema_valid_rate<0.7"
+   ],
+   "aborted": false
+  },
+  "kgw/nvidia/nemotron-3-super-120b-a12b:free": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 3113.1,
+    "p95": 6352.1,
+    "p99": 6955.9,
+    "mean": 3456.911111111111
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.0,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 1.0,
+    "confidence_std_mean": 0.0063
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 49388,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "kgw/nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 7125.6,
+    "p95": 22270.9,
+    "p99": 49217.6,
+    "mean": 10179.941666666668
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.0,
+   "schema_valid_rate": 1.0,
+   "parser_repair_rate": 0.1111,
+   "fail_closed_error_rate": 0.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 0.9722,
+    "confidence_std_mean": 0.1391
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 47987,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  },
+  "kgw/kilo-auto/free": {
+   "n_ok": 36,
+   "latency_ms": {
+    "p50": 4973.7,
+    "p95": 9926.4,
+    "p99": 14017.1,
+    "mean": 5603.552777777778
+   },
+   "timeout_rate": 0.0,
+   "error_rate": 0.1944,
+   "schema_valid_rate": 0.8056,
+   "parser_repair_rate": 0.1944,
+   "fail_closed_error_rate": 1.0,
+   "safety_violation_count": 0,
+   "consistency": {
+    "direction_agreement": 0.9444,
+    "confidence_std_mean": 0.1062
+   },
+   "context_fidelity": {
+    "failsafe_ok_rate": 1.0,
+    "context_citation_count": 0
+   },
+   "token_usage_total": 53935,
+   "repeats": 3,
+   "hard_fail_reasons": [],
+   "aborted": false
+  }
+ },
+ "scores": {
+  "groq/llama-3.3-70b-versatile": {
+   "score": 0.9903,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9722,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9454
+   }
+  },
+  "cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast": {
+   "score": 0.9901,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9697,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9535
+   }
+  },
+  "groq/openai/gpt-oss-120b": {
+   "score": 0.983,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9443,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9384
+   }
+  },
+  "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast": {
+   "score": 0.9843,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9466,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9537
+   }
+  },
+  "cf/@cf/zai-org/glm-4.7-flash": {
+   "score": 0.5,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.0,
+    "schema": 0.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 1.0
+   }
+  },
+  "cf/@cf/qwen/qwen2.5-coder-32b-instruct": {
+   "score": 0.982,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9374,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9537
+   }
+  },
+  "ollama/gpt-oss:120b": {
+   "score": 0.8946,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.8894,
+    "schema": 0.7778,
+    "consistency": 0.8889,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 1.0
+   }
+  },
+  "cf/@cf/meta/llama-3.2-1b-instruct": {
+   "score": 0.7924,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.9676,
+    "schema": 0.2778,
+    "consistency": 0.9167,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9539
+   }
+  },
+  "kgw/nvidia/nemotron-3-super-120b-a12b:free": {
+   "score": 0.9586,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.8443,
+    "schema": 1.0,
+    "consistency": 1.0,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9506
+   }
+  },
+  "kgw/nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "score": 0.903,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.6437,
+    "schema": 1.0,
+    "consistency": 0.9722,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.952
+   }
+  },
+  "kgw/kilo-auto/free": {
+   "score": 0.8754,
+   "weights_provisional": {
+    "latency": 0.25,
+    "schema": 0.25,
+    "consistency": 0.2,
+    "fidelity": 0.15,
+    "safety": 0.1,
+    "tokens": 0.05
+   },
+   "components": {
+    "latency": 0.7513,
+    "schema": 0.8056,
+    "consistency": 0.9444,
+    "fidelity": 1.0,
+    "safety": 1.0,
+    "tokens": 0.9461
+   }
+  }
+ }
+}

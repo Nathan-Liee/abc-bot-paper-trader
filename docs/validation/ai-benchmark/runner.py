@@ -50,7 +50,16 @@ MODELS = [
     "cf/@cf/qwen/qwen2.5-coder-32b-instruct",
     "ollama/gpt-oss:120b",
     "cf/@cf/meta/llama-3.2-1b-instruct",
+    "kgw/nvidia/nemotron-3-super-120b-a12b:free",
+    "kgw/nvidia/nemotron-3-ultra-550b-a55b:free",
+    "kgw/kilo-auto/free",
 ]
+
+# Per benchmark-spec.md v1.0.0 §5: HTTP 429 -> sleep 10 s, retry, max 3 retries
+# (4 attempts total). Measured latency excludes retry sleep: the benchmark
+# prefers measurement over retried latency.
+RETRY_429_MAX = 3
+RETRY_429_SLEEP = 10.0
 
 DIRECTION_MAP = {
     "buy": "BUY",
@@ -305,22 +314,30 @@ def call_model(
         method="POST",
     )
     t0 = time.monotonic()
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as exc:
-        ms = (time.monotonic() - t0) * 1000
-        err = f"HTTP{exc.code}"
-        return err, ms, exc.read().decode("utf-8", errors="replace")[:2000], err, {}
-    except TimeoutError:
-        ms = (time.monotonic() - t0) * 1000
-        return "TIMEOUT", ms, "", "TIMEOUT", {}
-    except urllib.error.URLError as exc:
-        ms = (time.monotonic() - t0) * 1000
-        return "TRANSPORT_ERROR", ms, "", f"TRANSPORT_ERROR:{exc.reason}", {}
-    except Exception as exc:  # noqa: BLE001 - benchmark must survive any error
-        ms = (time.monotonic() - t0) * 1000
-        return "TRANSPORT_ERROR", ms, "", f"TRANSPORT_ERROR:{type(exc).__name__}:{exc}", {}
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as exc:
+            ms = (time.monotonic() - t0) * 1000
+            err = f"HTTP{exc.code}"
+            body = exc.read().decode("utf-8", errors="replace")[:2000]
+            if exc.code == 429 and attempts <= RETRY_429_MAX:
+                time.sleep(RETRY_429_SLEEP)
+                continue
+            return err, ms, body, err, {}
+        except TimeoutError:
+            ms = (time.monotonic() - t0) * 1000
+            return "TIMEOUT", ms, "", "TIMEOUT", {}
+        except urllib.error.URLError as exc:
+            ms = (time.monotonic() - t0) * 1000
+            return "TRANSPORT_ERROR", ms, "", f"TRANSPORT_ERROR:{exc.reason}", {}
+        except Exception as exc:  # noqa: BLE001 - benchmark must survive any error
+            ms = (time.monotonic() - t0) * 1000
+            return "TRANSPORT_ERROR", ms, "", f"TRANSPORT_ERROR:{type(exc).__name__}:{exc}", {}
+        break
     ms = (time.monotonic() - t0) * 1000
     usage: dict = {}
     i = raw.rfind("}")

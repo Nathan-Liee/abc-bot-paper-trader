@@ -50,7 +50,9 @@ verdict `INVENTORY COMPLETE`, `benchmark-spec.md` v1.0.0, `tests/benchmark/`
 - Benchmark Specification = COMPLETE (`benchmark-spec.md` v1.0.0)
 - Benchmark Runner = COMPLETE (runner + fail-closed tests 20, committed `aab70e5`)
 - CI Baseline = GREEN (GitHub Actions all steps success, run on `0a30071`)
-- AI Benchmark Execution = IN PROGRESS (not yet run; no model selected)
+- AI Benchmark Execution = COMPLETE (396/396 requests; raw `results/raw/*.jsonl` + normalized/scored `results/normalized/`; run window 2026-08-15 00:40–01:14 +07)
+- AI Benchmark Evaluation = COMPLETE (`benchmark-report.md`; results re-verified, ranking + recommendation produced)
+- AI Model Selection = PENDING APPROVAL (recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`; NO final selection made)
 
 Phase A Data-Only Validation completed with verdict **PASS WITH WARNINGS** (`docs/validation/phase-a-validation-report.md`). Environment verification for HFM Cent `XAUUSDc` is BLOCKED by ISP (Telkomsel MITM) — see §8. Current milestone: reproducible benchmark of 11 shortlist models on the custom endpoint `http://10.139.136.202:20128/v1`. No final model selection in this milestone.
 
@@ -72,8 +74,8 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Reconciliation | ✅ COMPLETE | `collector/reconciliation/`; 4 triggers, idempotent, non-executive (runtime-verified) | `36228cb` |
 | Phase A Data-Only Validation | ✅ COMPLETE | `docs/validation/phase-a-validation-report.md`; verdict PASS WITH WARNINGS; 339 tests | `44d090f` |
 | Phase A Data Collection | ⏳ PENDING | next actionable; needs live bridge attach + collector tailer on HFM Cent `XAUUSDc` | — |
-| AI Model Benchmark | 🔄 IN PROGRESS | 11 candidates (inventory-report.md §11: 8 prior + 3 kgw free); spec v1.0.0 + dataset 12 scenarios + runner + 20 fail-closed tests; execution not yet run | `aab70e5` |
-| AI Selection | ⏳ PENDING | — | — |
+| AI Model Benchmark | ✅ COMPLETE | 11 candidates (inventory-report.md §11); spec v1.0.0 + dataset 12 scenarios + runner + 22 fail-closed tests; execution 396/396 (2026-08-15 00:40–01:14 +07); normalization + evaluation done; report `docs/validation/ai-benchmark/benchmark-report.md` | `aab70e5` + worktree |
+| AI Selection | ⏳ PENDING APPROVAL | report §20: primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary `groq/llama-3.3-70b-versatile`, fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`; no final selection without approval | `benchmark-report.md` |
 | Market Context Engine | ⏳ PENDING | — | — |
 | Trigger Engine | ⏳ PENDING | — | — |
 | AI Decision Engine | ⏳ PENDING | — | — |
@@ -113,6 +115,13 @@ SHORTLIST (11, per inventory-report.md §11 + benchmark-spec.md §3):
 DO NOT:         select final model; touch contract/schema/risk/execution/exit
                 authority; use cx/* as primary (quota-unstable); modify locked
                 architecture; touch HFM Cent/XAUUSDc target.
+EXECUTION STATUS:      COMPLETE — benchmark executed 396/396, results re-verified,
+                        evaluation report written (`benchmark-report.md`), validation
+                        green (360 tests / ruff / mypy), commit pending.
+AI SELECTION:          PENDING APPROVAL — recommended: primary
+                        `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast`, secondary
+                        `groq/llama-3.3-70b-versatile`, fallback
+                        `cf/@cf/qwen/qwen2.5-coder-32b-instruct` (report §17/§20).
 ```
 
 ## 6. Completed Work
@@ -128,6 +137,8 @@ DO NOT:         select final model; touch contract/schema/risk/execution/exit
 9. **Phase A Data-Only Validation** — full pipeline audit + fixes (malformed-line metric). Commits `856c527`, `44d090f`. Validated: 339 tests passed, ruff/mypy clean, verdict **PASS WITH WARNINGS**.
 10. **CI Regression Cleanup** — reader rotation bug (inode reuse after unlink→recreate; reproduced on Linux/WSL) fixed with disappearance-gap detection. Commit `1ba7fff`. Validated: CI BASELINE GREEN — run 31820083519 on `aab70e5` all steps success; 359 tests; report `docs/validation/ci-regression-cleanup-report.md`.
 11. **AI Model Discovery + Inventory + Benchmark Spec + Runner** — 57 models via `GET /v1/models`; inventory report verdict `INVENTORY COMPLETE`, 11 benchmark candidates (free/paid verified by probe); spec v1.0.0; runner + 20 fail-closed tests. Commit `aab70e5`. Validated: `docs/validation/ai-benchmark/inventory-report.md`, `benchmark-spec.md`, `tests/benchmark/`.
+12. **AI Benchmark Execution + Normalization** — 11 models × 12 scenarios × 3 repeats = 396 requests against `http://10.139.136.202:20128/v1` (run window 2026-08-15 00:40–01:14 +07; results uncommitted). Validated: raw 396/396 lines with real endpoint payloads, unique (model,scenario,repeat) 396/396, per-model coverage 36/36; normalized `results/normalized/metrics.json` + `results.json` (396 entries); hard-fail: `cf/@cf/zai-org/glm-4.7-flash` (0/36 OK — 31 HTTP400 + 5 TRANSPORT_ERROR) and `cf/@cf/meta/llama-3.2-1b-instruct` (schema_valid_rate 0.2778). No final model selected.
+13. **AI Benchmark Evaluation + Final Report** — independent recomputation of all metrics and scores matches stored normalized results (0 diffs across 11 models); `benchmark-report.md` written (21 sections). Benchmark winner `groq/llama-3.3-70b-versatile` (0.9903); operational winner / recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast` (0.9901, p95 777 ms, confidence std 0.0); secondary `groq/llama-3.3-70b-versatile`; fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`. Validation GREEN: 360 tests pass, ruff check/format clean, mypy clean (48 files). Final model selection STILL PENDING APPROVAL — nothing implemented.
 
 ## 7. Pending Work (dependency order)
 
@@ -272,13 +283,14 @@ Every time a task completes, the agent MUST update this document:
 ```
 LAST VERIFIED:          2026-08-15 +07:00
 CURRENT PHASE:          AI MODEL BENCHMARK
-CURRENT MILESTONE:      AI Benchmark Execution
-LAST COMPLETED MILESTONE: CI Regression Cleanup (CI BASELINE GREEN)
-LATEST COMMIT:          0a30071 (CI green, all steps success)
-TEST STATUS:            359 passed; ruff check/format clean; mypy clean (48 files)
+CURRENT MILESTONE:      AI Benchmark Evaluation (COMPLETE — report written; approval pending)
+LAST COMPLETED MILESTONE: AI Benchmark Evaluation — report + ranking + recommendation (2026-08-15)
+LATEST COMMIT:          944a87a (worktree uncommitted: runner 429-retry + 11 models, results/, report, AGENTS.md)
+TEST STATUS:            360 passed; ruff check/format clean; mypy clean (48 files)
 BLOCKER:                None (Cent env verification ISP-blocked — §8)
-NEXT ACTION:            Run AI benchmark execution (11 models, spec v1.0.0);
-                        no AI final selection on this milestone.
+NEXT ACTION:            Human approval of recommended primary AI model (report §20);
+                        then implement AI Decision Engine (separate task);
+                        Phase A Data Collection remains next actionable pipeline item.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -298,3 +310,10 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-15 +07 | Benchmark Specification | COMPLETE | `benchmark-spec.md` v1.0.0 (12 scenarios, 3 repeats, fail-closed rules, scoring weights provisional) | 11 models × 36 req = 396 requests budget; runner does NOT send `response_format` (prompt-mode JSON). |
 | 2026-08-15 +07 | Benchmark Runner | COMPLETE | `tests/benchmark/test_benchmark_runner.py` 20 fail-closed tests; runner.py committed `aab70e5` | Timeout/429/transport/parse/unexpected-tool-call → NO-TRADE, confidence 0.0. |
 | 2026-08-15 +07 | AI Benchmark Execution | IN PROGRESS | not yet run — next actionable | AGENTS.md synced to 11 candidates; CI green (`0a30071`); no model selected. |
+| 2026-08-15 +07 | AI Benchmark Execution | IN PROGRESS | execution started | runner.py synced to 11 candidates (was 8) + spec §5 HTTP429 retry (max 3, sleep 10s) + 2 regression tests (22 benchmark tests PASS). Run: 11 models × 12 scenarios × 3 repeats = 396 requests on `http://10.139.136.202:20128/v1`; results → `docs/validation/ai-benchmark/results/`. |
+| 2026-08-15 +07 | AI Benchmark Execution | COMPLETE | raw 396/396 (11 files × 36 lines, window 00:40–01:14 +07); status OK 360 / HTTP400 31 / TRANSPORT_ERROR 5 | 36/36 (scenario,repeat) combos per model; unique keys 396/396; payloads real (endpoint responses, not placeholders); all 31 HTTP400 + 5 TRANSPORT_ERROR belong to `cf/@cf/zai-org/glm-4.7-flash`; no missing/duplicate inference; no runner crash — process exited normally after last write (01:14:52). |
+| 2026-08-15 +07 | Benchmark Normalization | COMPLETE | `results/normalized/metrics.json` + `results.json` (396 entries) written 01:14:52 +07 | Hard-fail (spec fail-closed): glm-4.7-flash n_ok=0, llama-3.2-1b schema_valid_rate 0.2778; ollama score 0.8946 (repair 0.2222), kilo 0.8754 (repair 0.1944); weights provisional; scoring ranking present; comparison not yet written to report. |
+| 2026-08-15 +07 | AI Benchmark Execution — resume analysis | COMPLETE | interruption NOT confirmed; benchmark NOT in progress state | AGENTS.md work log was stale ("execution started") vs repository evidence (raw + normalized complete). Verdict: nothing to resume — all 396 inferences valid & stored; no duplicate prevention concern. Remaining: validation suite, final report, commit. |
+| 2026-08-15 +07 | AI Benchmark Evaluation | COMPLETE | raw + normalized re-validated: 396/396 records, 0 duplicates, 0 missing combos, 0 malformed, timestamps monotonic; independent recompute of all metrics + scores = 0 diffs vs stored | 360 OK / 31 HTTP400 / 5 TRANSPORT_ERROR (all glm-4.7-flash); 0 timeouts, 0 aborted; hard-fails: glm-4.7-flash, llama-3.2-1b; failsafe rate 1.0 for all models; safety violations 0. |
+| 2026-08-15 +07 | AI Benchmark Report | COMPLETE | `docs/validation/ai-benchmark/benchmark-report.md` (21 sections) | Benchmark winner groq/llama-3.3-70b-versatile 0.9903; operational winner + recommended primary cf/llama-3.1-8b-instruct-fp8-fast 0.9901 (p95 777 ms, std 0.0); secondary groq 70b; fallback cf/qwen2.5-coder-32b; cost: only kgw free-tier verified (3 routes), 8 models COST_UNKNOWN. Final model selection PENDING APPROVAL. |
+| 2026-08-15 +07 | Validation suite | COMPLETE | pytest 360 passed (40.9 s); ruff check . clean; ruff format --check . clean (98 files); mypy collector shared clean (48 files) | No source changes required; all green before commit. |

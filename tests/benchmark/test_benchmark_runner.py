@@ -179,14 +179,53 @@ def test_http_429_fails_closed(monkeypatch) -> None:  # noqa: ANN001
     exc = runner.urllib.error.HTTPError(
         "http://x", 429, "rate limit", {}, io.BytesIO(b'{"error":"rate limited"}')
     )
+    calls = {"n": 0}
 
     def boom(*args, **kwargs):  # noqa: ARG001
+        calls["n"] += 1
         raise exc
 
     monkeypatch.setattr(runner.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(runner, "RETRY_429_SLEEP", 0.0)
     status, _, raw, error, _ = runner.call_model("http://x/v1", "k", "m", [], 1.0)
     assert status == "HTTP429"
     assert error == "HTTP429"
+    assert calls["n"] == runner.RETRY_429_MAX + 1  # 1 attempt + 3 retries per spec
+
+
+def test_http_429_recovers_on_retry(monkeypatch) -> None:  # noqa: ANN001
+    import io
+
+    exc = runner.urllib.error.HTTPError(
+        "http://x", 429, "rate limit", {}, io.BytesIO(b'{"error":"rate limited"}')
+    )
+    calls = {"n": 0}
+
+    def boom(*args, **kwargs):  # noqa: ARG001
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise exc
+        body = json.dumps(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {"direction": "NO-TRADE", "confidence": 0.1, "reason": "ok"}
+                            )
+                        }
+                    }
+                ]
+            }
+        ).encode()
+        return io.BytesIO(body)
+
+    monkeypatch.setattr(runner.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(runner, "RETRY_429_SLEEP", 0.0)
+    status, _, raw, error, _ = runner.call_model("http://x/v1", "k", "m", [], 1.0)
+    assert status == "OK"
+    assert error is None
+    assert calls["n"] == 2
 
 
 def test_percentile() -> None:
