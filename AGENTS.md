@@ -284,7 +284,7 @@ CURRENT MILESTONE:      Risk Parameter Evaluation — COMPLETE; owner selects pr
 LAST COMPLETED MILESTONE: Risk Parameter Evaluation — decision matrix + sensitivity +
                         3 profiles on live XAUUSDc evidence;
                         report `docs/validation/risk-engine/risk-parameter-evaluation.md`
-LATEST COMMIT:          <evaluation commit> (docs(risk): evaluate runtime risk parameters)
+LATEST COMMIT:          a65de79 (docs(risk): evaluate runtime risk parameters)
 TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
 BLOCKER:                owner decisions (SL, max spread, exposure policy, margin
                         buffer, leverage handling, cost treatment) — report §13;
