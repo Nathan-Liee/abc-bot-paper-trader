@@ -286,7 +286,7 @@ CURRENT MILESTONE:      Risk Configuration Finalization — runtime evidence
 LAST COMPLETED MILESTONE: HFM Cent XAUUSDc Read-Only Runtime Discovery — account
                         + symbol + 61 spread samples + mechanics; report
                         `docs/validation/runtime/xauusdc-cent-readonly-observation.md`
-LATEST COMMIT:          <observation commit> (docs(validation): record hfm cent xauusdc runtime evidence)
+LATEST COMMIT:          a73cadf (docs(validation): record hfm cent xauusdc runtime evidence)
 TEST STATUS:            449 passed; ruff check/format clean; mypy clean (65 files)
 BLOCKER:                owner decisions on SL distance (eco min ~36pts spread),
                         max spread (observed median 36pts), margin buffer,
