@@ -37,8 +37,11 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    PAPER VALIDATION EVIDENCE
-CURRENT MILESTONE: Multi-Session XAUUSDc Telemetry — PARTIAL (Asian session collected, n=1799); London/NY pending; production UNLOCKED
+CURRENT PHASE:    PAPER VALIDATION EVIDENCE + EXECUTION DESIGN
+CURRENT MILESTONE: Execution Architecture Readiness — design COMPLETE
+                        (contracts + state machine + EA boundary);
+                        READY WITH OPEN DECISIONS (OD-1..OD-10); no execution
+                        implementation; production UNLOCKED
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -86,10 +89,11 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Risk Parameter Evaluation | ✅ COMPLETE (approval pending) | decision matrix + SL/spread/exposure/margin sensitivity + 3 profiles in `docs/validation/risk-engine/risk-parameter-evaluation.md`; no config locked | docs-only |
 | Risk Configuration v0.1 (PAPER VALIDATION) | ✅ APPLIED FOR PAPER VALIDATION | `RiskConfig` (profile_name=PAPER_VALIDATION_V0.1, is_production=false, requires_paper_validation=true; risk 0.5% eq, pos 1, DD 5%, SL 50pts, spread 45pts, exposure 100% eq, margin 10% eq+1x budget, leverage 2000, compounding 0%); 23 risk tests; 455 suite PASS; reports `paper-validation-risk-config-v0.1.md` + `risk-config-finalization.md` §PAPER_VALIDATION_V0.1; production config UNLOCKED | `3b096c7` |
 | Paper Validation Harness | ✅ COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md`; all evidence SIMULATED; production RiskConfig UNLOCKED | `fc9d077` |
-| Multi-Session XAUUSDc Telemetry | ⏳ PARTIAL (Asian collected) | 1799 read-only samples (ASIAN session, 2026-08-17 00:38–01:11 UTC); spread stable 34–36 pts, 0% > 45; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl` + report `xauusdc-multi-session-report.md`; London/NY/overlap pending; production UNLOCKED | docs-only |
+| Multi-Session XAUUSDc Telemetry | ⏳ PARTIAL (Asian collected) | 2240 read-only samples (ASIAN session, 2026-08-17 00:38–01:46 UTC, 3 windows); spread stable 34–36 pts, 0% > 45; strategy switched 08:47 +07 to short-window (30–60 min) collection; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl` + report `xauusdc-multi-session-report.md`; London/overlap/NY/off-hours pending; production UNLOCKED | docs-only |
+| Execution Architecture Design | ✅ READY (OPEN DECISIONS) | design-only report `docs/validation/execution/execution-architecture-readiness.md`: TradePlan/ExecutionCommand/ExecutionResult contracts, state machine (CREATED→CLOSED + 4 failure states), idempotency (command_id journal, trade_id uniqueness, reconcile-first), broker source of truth, partial-fill/SL-attachment/ABC-exit boundaries, error matrix + retry policy, EA boundary + security gate, paper/demo/real executor abstraction, 12 open decisions (OD-1..OD-12); NO code, NO RiskConfig change, NO Obsidian edit; 476 tests PASS, ruff/mypy clean; contracts consistent with locked canonical event model (no schema change) | docs-only |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
-| Execution Engine | ⏳ PENDING | — | — |
+| Execution Engine | ⏳ PENDING (design ready, NOT implemented) | contracts + readiness report `docs/validation/execution/execution-architecture-readiness.md`; implementation blocked on owner decisions OD-1..OD-10 | — |
 | Exit Engine | ⏳ PENDING | — | — |
 | Paper Trading | ✅ HARNESS COMPLETE | `paper_validation/` (deterministic simulation, 15 scenario groups, cost model, trade evidence); 476 tests PASS; report `docs/validation/paper-trading/paper-validation-report.md`; verdict PASS WITH FINDINGS; production config UNLOCKED; cost treatment is critical pending | commit |
 | ≥200 Strategy Trades | ⏳ PENDING | — | — |
@@ -101,23 +105,33 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Multi-Session XAUUSDc Read-Only Telemetry
-OBJECTIVE:      Collect multi-session market telemetry (HFM Cent REAL, XAUUSDc)
-                read-only to re-evaluate PAPER_VALIDATION_V0.1 before a
-                production RiskConfig lock. Strictly read-only.
-DO NOT:         Trade, order, modify, change account/broker; change RiskConfig/
-                AI/engine/Obsidian; optimize profitability; infer win rate.
-EXECUTION STATUS:      COMPLETE — 1799 read-only samples collected (ASIAN
-                        session only, 2026-08-17 00:38–01:11 UTC, 2 windows).
-                        Spread stable 34–36 pts, 0% > 45. Raw JSONL +
-                        report `docs/validation/runtime/multi-session/`.
-                        Verdict PARTIAL — London/NY/overlap sessions not yet
-                        collected. Production RiskConfig stays UNLOCKED.
-COLLECTION SCRIPT:     temp-only (not committed); read-only IPC, static guard,
-                        JSONL for loops; safe to rerun during other sessions.
-NEXT:           Rerun collection during London/NY/overlap windows -> merge
-                -> recompute -> lock-readiness for max_spread/SL -> Execution
-                design. Production RiskConfig NOT LOCKED.
+CURRENT TASK:   Execution Architecture Readiness & Contract Design
+OBJECTIVE:      Design-only: contracts + state machine + failure modes +
+                observability + EA boundary so implementation does not need
+                to break boundaries. NO execution implementation.
+DO NOT:         OrderSend / PositionOpen/Close / modify / pending order /
+                EA execution / demo broker execution; change RiskConfig /
+                AI / engine / Obsidian.
+STATUS:         DESIGN COMPLETE — `docs/validation/execution/
+                execution-architecture-readiness.md` (23 sections):
+                TradePlan / ExecutionCommand / ExecutionResult contracts,
+                state machine, idempotency, broker source of truth,
+                partial fill, SL attachment, ABC exit, position
+                management, freshness, error classification, retry,
+                EA boundary, observability, security, executor
+                abstraction. Verdict READY WITH OPEN DECISIONS
+                (OD-1..OD-12; owner confirmations in report §21).
+                Bridge stays telemetry-only; RiskConfig
+                PAPER_VALIDATION_V0.1 unchanged; production UNLOCKED;
+                Obsidian not modified (conflict recorded: partial-fill
+                policy 08 vs Order Lifecycle PENDING).
+NEXT:           Owner review OD-1..OD-10 (partial fill confirm,
+                entry type/requote, profit threshold, retry budgets,
+                emergency close, TTL, channel). Then implement
+                `execution/` contracts package (dataclasses + schema,
+                no broker code) -> simulated executor on same contract
+                -> separate EA task (demo first). Short-window telemetry
+                (London/NY) remains parallel pending evidence.
 ```
 
 ## 6. Completed Work
@@ -136,6 +150,7 @@ NEXT:           Rerun collection during London/NY/overlap windows -> merge
 12. **AI Benchmark Execution + Normalization** — 11 models × 12 scenarios × 3 repeats = 396 requests against `http://10.139.136.202:20128/v1` (run window 2026-08-15 00:40–01:14 +07; results uncommitted). Validated: raw 396/396 lines with real endpoint payloads, unique (model,scenario,repeat) 396/396, per-model coverage 36/36; normalized `results/normalized/metrics.json` + `results.json` (396 entries); hard-fail: `cf/@cf/zai-org/glm-4.7-flash` (0/36 OK — 31 HTTP400 + 5 TRANSPORT_ERROR) and `cf/@cf/meta/llama-3.2-1b-instruct` (schema_valid_rate 0.2778). No final model selected.
 13. **AI Benchmark Evaluation + Final Report** — independent recomputation of all metrics and scores matches stored normalized results (0 diffs across 11 models); `benchmark-report.md` written (21 sections). Benchmark winner `groq/llama-3.3-70b-versatile` (0.9903); operational winner / recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast` (0.9901, p95 777 ms, confidence std 0.0); secondary `groq/llama-3.3-70b-versatile`; fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`. Validation GREEN: 360 tests pass, ruff check/format clean, mypy clean (48 files). Final model selection STILL PENDING APPROVAL — nothing implemented.
 14. **AI Decision Engine Implementation** — `ai_decision/` package (config/prompt/client/parsing/validation/record/engine/gate) with exact approved model IDs, deterministic fallback PRIMARY→SECONDARY→FALLBACK→NO-TRADE (bounded retry), strict schema/authority validation, fail-closed on all failure classes, observability (inference_id/model/latency/fallback/errors), SystemGate boundary interface only. Found + handled live router quirk: body + trailing `data: [DONE]`. 71 new tests (parsing/validation/engine/integration, mocked provider); full suite 431 PASS; ruff/format clean; mypy clean (57 files); live smoke PASS `BUY 0.8 @ 1032 ms` (2026-08-17). Report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`. Risk Engine / Execution / EA NOT implemented.
+15. **Execution Architecture Readiness (design-only)** — `docs/validation/execution/execution-architecture-readiness.md` (23 sections): TradePlan / ExecutionCommand / ExecutionResult contracts; deterministic state machine CREATED→VALIDATED→SUBMITTED→PARTIALLY_FILLED→FILLED→MODIFYING→CLOSED + REJECTED/FAILED/EXPIRED/UNKNOWN; idempotency (command_id journal, trade_id uniqueness, reconcile-first, restart replay); broker source of truth choreography; partial fill / SL attachment (verbatim + emergency) / ABC exit / position management boundaries; freshness+expiry gates; 13-row error matrix + 4-class retry policy; EA boundary (responsibilities/forbidden) + security gate; 7-ID observability lineage mapped 1:1 to locked canonical events (no schema change); paper/demo/real executor abstraction; 12 open decisions OD-1..OD-12. No code written; RiskConfig unchanged; Obsidian not edited (partial-fill conflict documented). 476 tests PASS; ruff check/format clean; mypy clean (74 files).
 
 ## 7. Pending Work (dependency order)
 
@@ -279,18 +294,24 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          PAPER VALIDATION EVIDENCE
-CURRENT MILESTONE:      Multi-Session XAUUSDc Telemetry — PARTIAL (ASIAN n=1799
-                        collected; London/NY/overlap pending); production UNLOCKED
-LAST COMPLETED MILESTONE: Multi-Session Telemetry — 1799 read-only samples (ASIAN);
-                        report + raw JSONL under docs/validation/runtime/multi-session/
-LATEST COMMIT:          4da6958 (docs(validation): add multi-session xauusdc telemetry evidence)
+CURRENT PHASE:          PAPER VALIDATION EVIDENCE + EXECUTION DESIGN
+CURRENT MILESTONE:      Execution Architecture Readiness — design COMPLETE,
+                        READY WITH OPEN DECISIONS (OD-1..OD-10 owner);
+                        no execution implementation; production UNLOCKED
+LAST COMPLETED MILESTONE: Execution Architecture Design — contracts + state
+                        machine + EA boundary report
+                        docs/validation/execution/execution-architecture-readiness.md
+LATEST COMMIT:          <pending docs(validation): define execution architecture readiness>
 TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
-BLOCKER:                London/NY/overlap session samples not yet collected ->
-                        max_spread 45 and SL 50 cannot be locked for production.
-NEXT ACTION:            Rerun read-only collector during London (14:00-16:00 +07)
-                        and NY/overlap (21:00-03:00 +07) -> merge JSONL ->
-                        recompute aggregation -> lock-readiness evaluation.
+BLOCKER:                Owner decisions OD-1..OD-10 (partial fill confirm,
+                        entry type/requote, profit threshold, retry budgets,
+                        emergency close, TTL, channel) before execution
+                        implementation. Telemetry: London/NY sessions pending.
+NEXT ACTION:            Owner review of Open Decisions -> implement
+                        `execution/` contracts package (dataclasses + schema,
+                        no broker code) -> simulated executor on same
+                        contract -> separate EA task (demo first). Short-
+                        window telemetry (London/NY) parallel pending.
                         Production RiskConfig: NOT LOCKED.
 ```
 
@@ -333,4 +354,6 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | Risk Parameter Evaluation | COMPLETE | decision matrix + SL sensitivity + spread/exposure/margin options + 3 profiles; report `docs/validation/risk-engine/risk-parameter-evaluation.md`; 449 tests green | READY FOR HUMAN APPROVAL. Finding: SL 2.0pt invalid (spread 36pt); econ-valid SL 40–72pt needs equity 8,000–14,400 USC for 0.01 lot @ 0.5%; spread candidates 36–50pt accept observed window; leverage observed 2000; cost treatment NEEDS PAPER VALIDATION. No config locked. |
 | 2026-08-17 +07 | Risk Configuration v0.1 (PAPER_VALIDATION) | APPLIED | owner-approved profile applied to `RiskConfig` (equity ratios, SL points, leverage fallback 2000, compounding 0%); exposure/margin now ratio-based; SL-above-observed-spread guard; 23 risk tests; 455 suite green; ruff/mypy clean; reports `paper-validation-risk-config-v0.1.md` + finalization §PAPER_VALIDATION_V0.1 | Profile metadata: is_production=false, requires_paper_validation=true. Production Risk Configuration remains UNLOCKED. Commission/swap = PENDING_PAPER_EVIDENCE. Next: paper validation → revisit → Execution design. |
 | 2026-08-17 +07 | Paper Validation Harness | COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md` | Verdict PASS WITH FINDINGS. All evidence SIMULATED. 15 scenario groups covered. Risk budget invariant holds at zero-slippage; overrun flagged under high costs → cost treatment is critical pending. ABC exit works (NET_PROFIT > 0 → close). SL 50pts valid. Production RiskConfig UNLOCKED. |
-| 2026-08-17 +07 | Multi-Session XAUUSDc Telemetry | PARTIAL | 1799 read-only samples (ASIAN only, 00:38–01:11 UTC); spread stable 34–36 pts, 0% > 45; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl`; report `xauusdc-multi-session-report.md`; zero execution | Asian evidence consistent with prior 61-sample run. London/NY/overlap NOT collected → max_spread 45 and SL 50 cannot be locked. Production RiskConfig UNLOCKED. |
+| 2026-08-17 +07 | Multi-Session XAUUSDc Telemetry | PARTIAL | 2240 read-only samples (ASIAN only, 00:38–01:46 UTC); spread stable 34–36 pts, 0% > 45; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl`; report `xauusdc-multi-session-report.md`; zero execution | Asian evidence consistent with prior 61-sample run. London/NY/overlap NOT collected → max_spread 45 and SL 50 cannot be locked. Production RiskConfig UNLOCKED. |
+| 2026-08-17 08:47 +07 | Multi-Session Telemetry — strategy switch | DONE (switch) | continuous 22.4 h collector (proc PID 10588/2576) terminated; retained tail window 3 = 441 ASIAN samples (01:39:26–01:46:41 UTC); short-window protocol active (30–60 min, ~1 s, same JSONL schema, append-only, run only while PC available, no background > 2 h) | JSONL do-not-delete rule honored; 2240 total samples, all valid, 0 malformed. Windows remaining: LONDON, LONDON_NY_OVERLAP, NEW_YORK, OFF_HOURS. Next window: LONDON ~14:00–15:30 +07. No commit (per rule: commit only after a new window completes). |
+| 2026-08-17 +07 | Execution Architecture Readiness | COMPLETE (design) | `docs/validation/execution/execution-architecture-readiness.md` (23 sections): TradePlan/ExecutionCommand/ExecutionResult contracts; state machine; idempotency; broker truth; partial fill/SL/ABC-exit; error matrix; retry policy; EA boundary; observability lineage (1:1 canonical events, no schema change); security; executor abstraction; OD-1..OD-12. 476 tests PASS; ruff/mypy clean (74 files) | VERDICT READY WITH OPEN DECISIONS. Design-only: no code, no RiskConfig change, no Obsidian edit (partial-fill conflict 08 vs Order Lifecycle recorded). Bridge telemetry-only. Production RiskConfig UNLOCKED. |
