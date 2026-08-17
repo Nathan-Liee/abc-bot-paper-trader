@@ -37,11 +37,12 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    PAPER VALIDATION EVIDENCE + EXECUTION DESIGN
-CURRENT MILESTONE: Execution Architecture Readiness — design COMPLETE
-                        (contracts + state machine + EA boundary);
-                        READY WITH OPEN DECISIONS (OD-1..OD-10); no execution
-                        implementation; production UNLOCKED
+CURRENT PHASE:    PAPER VALIDATION EVIDENCE + EXECUTION IMPLEMENTATION
+CURRENT MILESTONE: Execution Engine Final Review — implementation COMPLETE;
+                        contracts + state machine + journal + retry +
+                        simulated executor + reconciliation implemented;
+                        625 tests PASS; ruff/mypy clean (85 files);
+                        EA NOT implemented; production LOCKED
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -93,7 +94,7 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Execution Architecture Design | ✅ READY (OPEN DECISIONS) | design-only report `docs/validation/execution/execution-architecture-readiness.md`: TradePlan/ExecutionCommand/ExecutionResult contracts, state machine (CREATED→CLOSED + 4 failure states), idempotency (command_id journal, trade_id uniqueness, reconcile-first), broker source of truth, partial-fill/SL-attachment/ABC-exit boundaries, error matrix + retry policy, EA boundary + security gate, paper/demo/real executor abstraction, 12 open decisions (OD-1..OD-12); NO code, NO RiskConfig change, NO Obsidian edit; 476 tests PASS, ruff/mypy clean; contracts consistent with locked canonical event model (no schema change) | docs-only |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
-| Execution Engine | ⏳ PENDING (design ready, NOT implemented) | contracts + readiness report `docs/validation/execution/execution-architecture-readiness.md`; implementation blocked on owner decisions OD-1..OD-10 | — |
+| Execution Engine | ✅ COMPLETE (paper/simulation) | `execution/` package (10 modules); TradePlan/ExecutionCommand/ExecutionResult contracts; deterministic state machine; SQLite WAL journal (append-only + keyed projection); 18-code error matrix + 6-class retry policy; 13-scenario SimulatedExecutor; ReconciliationBoundary; OD-1..OD-10 implemented; 625 tests PASS; ruff/mypy clean (85 files); report `docs/validation/execution/execution-final-readiness.md`; verdict PASS WITH FINDINGS; NO MT5/EA/live broker; production LOCKED | this commit |
 | Exit Engine | ⏳ PENDING | — | — |
 | Paper Trading | ✅ HARNESS COMPLETE | `paper_validation/` (deterministic simulation, 15 scenario groups, cost model, trade evidence); 476 tests PASS; report `docs/validation/paper-trading/paper-validation-report.md`; verdict PASS WITH FINDINGS; production config UNLOCKED; cost treatment is critical pending | commit |
 | ≥200 Strategy Trades | ⏳ PENDING | — | — |
@@ -105,33 +106,27 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Execution Architecture Readiness & Contract Design
-OBJECTIVE:      Design-only: contracts + state machine + failure modes +
-                observability + EA boundary so implementation does not need
-                to break boundaries. NO execution implementation.
-DO NOT:         OrderSend / PositionOpen/Close / modify / pending order /
-                EA execution / demo broker execution; change RiskConfig /
-                AI / engine / Obsidian.
-STATUS:         DESIGN COMPLETE — `docs/validation/execution/
-                execution-architecture-readiness.md` (23 sections):
-                TradePlan / ExecutionCommand / ExecutionResult contracts,
-                state machine, idempotency, broker source of truth,
-                partial fill, SL attachment, ABC exit, position
-                management, freshness, error classification, retry,
-                EA boundary, observability, security, executor
-                abstraction. Verdict READY WITH OPEN DECISIONS
-                (OD-1..OD-12; owner confirmations in report §21).
-                Bridge stays telemetry-only; RiskConfig
-                PAPER_VALIDATION_V0.1 unchanged; production UNLOCKED;
-                Obsidian not modified (conflict recorded: partial-fill
-                policy 08 vs Order Lifecycle PENDING).
-NEXT:           Owner review OD-1..OD-10 (partial fill confirm,
-                entry type/requote, profit threshold, retry budgets,
-                emergency close, TTL, channel). Then implement
-                `execution/` contracts package (dataclasses + schema,
-                no broker code) -> simulated executor on same contract
-                -> separate EA task (demo first). Short-window telemetry
-                (London/NY) remains parallel pending evidence.
+CURRENT TASK:   Execution Engine Final Review & EA Integration Readiness
+OBJECTIVE:      Final technical review of `execution/` implementation:
+                authority boundaries, contracts, state machine,
+                idempotency, retry, partial fill, simulator,
+                reconciliation, safety, EA interface specification.
+                NO EA/MT5/live implementation.
+DO NOT:         MT5 execution / MQL5 EA / broker API / live order /
+                position modification / production RiskConfig change /
+                automatic production unlock.
+STATUS:         COMPLETE — `execution/` implemented + reviewed;
+                625 tests PASS; ruff check/format clean; mypy clean
+                (85 files); safety scan PASS (no MT5/network/secrets);
+                EA interface spec documented; readiness report
+                `docs/validation/execution/execution-final-readiness.md`;
+                verdict PASS WITH FINDINGS; production LOCKED.
+NEXT:           Implement the EA (MQL5 Expert Advisor) on the
+                Executor Protocol — demo first (HFM Demo), then
+                production (HFM Cent XAUUSDc) only after production
+                RiskConfig locked + owner authorization. No contract
+                changes required — Executor Protocol +
+                ExecutionCommand + ExecutionResult = full interface.
 ```
 
 ## 6. Completed Work
@@ -151,6 +146,7 @@ NEXT:           Owner review OD-1..OD-10 (partial fill confirm,
 13. **AI Benchmark Evaluation + Final Report** — independent recomputation of all metrics and scores matches stored normalized results (0 diffs across 11 models); `benchmark-report.md` written (21 sections). Benchmark winner `groq/llama-3.3-70b-versatile` (0.9903); operational winner / recommended primary `cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast` (0.9901, p95 777 ms, confidence std 0.0); secondary `groq/llama-3.3-70b-versatile`; fallback `cf/@cf/qwen/qwen2.5-coder-32b-instruct`. Validation GREEN: 360 tests pass, ruff check/format clean, mypy clean (48 files). Final model selection STILL PENDING APPROVAL — nothing implemented.
 14. **AI Decision Engine Implementation** — `ai_decision/` package (config/prompt/client/parsing/validation/record/engine/gate) with exact approved model IDs, deterministic fallback PRIMARY→SECONDARY→FALLBACK→NO-TRADE (bounded retry), strict schema/authority validation, fail-closed on all failure classes, observability (inference_id/model/latency/fallback/errors), SystemGate boundary interface only. Found + handled live router quirk: body + trailing `data: [DONE]`. 71 new tests (parsing/validation/engine/integration, mocked provider); full suite 431 PASS; ruff/format clean; mypy clean (57 files); live smoke PASS `BUY 0.8 @ 1032 ms` (2026-08-17). Report `docs/validation/ai-decision-engine/ai-decision-engine-validation.md`. Risk Engine / Execution / EA NOT implemented.
 15. **Execution Architecture Readiness (design-only)** — `docs/validation/execution/execution-architecture-readiness.md` (23 sections): TradePlan / ExecutionCommand / ExecutionResult contracts; deterministic state machine CREATED→VALIDATED→SUBMITTED→PARTIALLY_FILLED→FILLED→MODIFYING→CLOSED + REJECTED/FAILED/EXPIRED/UNKNOWN; idempotency (command_id journal, trade_id uniqueness, reconcile-first, restart replay); broker source of truth choreography; partial fill / SL attachment (verbatim + emergency) / ABC exit / position management boundaries; freshness+expiry gates; 13-row error matrix + 4-class retry policy; EA boundary (responsibilities/forbidden) + security gate; 7-ID observability lineage mapped 1:1 to locked canonical events (no schema change); paper/demo/real executor abstraction; 12 open decisions OD-1..OD-12. No code written; RiskConfig unchanged; Obsidian not edited (partial-fill conflict documented). 476 tests PASS; ruff check/format clean; mypy clean (74 files).
+16. **Execution Engine Implementation + Final Review** — `execution/` package (10 modules: models, validation, state_machine, retry, journal, engine, executor, simulated, reconciliation, errors); TradePlan/ExecutionCommand/ExecutionResult frozen dataclasses; deterministic state machine CREATE→VALIDATED→SUBMITTED→PARTIALLY_FILLED→FILLED→MODIFYING→CLOSED + REJECTED/FAILED/EXPIRED/UNKNOWN; SQLite WAL journal (append-only triggers + keyed projection + active-trade uniqueness + restart recovery); 18-code error matrix → 6-class retry policy (SAFE/UNSAFE/RECONCILE/PERMANENT/EMERGENCY/IDEMPOTENT); RetryPolicy (submit/close/sl_attach retries=2); 13-scenario SimulatedExecutor (full/partial/reject/timeout/ambiguous/requote/stale/position/SL fail/close fail/expired/duplicate); ReconciliationBoundary (UNKNOWN→broker-truth adoption); OD-1 (CANCEL_REMAINING) through OD-10 (retry budget) implemented; authority boundary clean (execution imports stdlib + own modules only — zero risk_engine/ai_decision/broker); safety scan PASS (no MT5/network/secrets); full suite 625 PASS; ruff check/format clean; mypy clean (85 files); readiness report `docs/validation/execution/execution-final-readiness.md` (17 sections + EA interface spec); verdict PASS WITH FINDINGS; EA NOT implemented; production RiskConfig not locked; production LOCKED.
 
 ## 7. Pending Work (dependency order)
 
@@ -294,24 +290,23 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          PAPER VALIDATION EVIDENCE + EXECUTION DESIGN
-CURRENT MILESTONE:      Execution Architecture Readiness — design COMPLETE,
-                        READY WITH OPEN DECISIONS (OD-1..OD-10 owner);
-                        no execution implementation; production UNLOCKED
-LAST COMPLETED MILESTONE: Execution Architecture Design — contracts + state
-                        machine + EA boundary report
-                        docs/validation/execution/execution-architecture-readiness.md
-LATEST COMMIT:          d21b412 (docs(validation): define execution architecture readiness)
-TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
-BLOCKER:                Owner decisions OD-1..OD-10 (partial fill confirm,
-                        entry type/requote, profit threshold, retry budgets,
-                        emergency close, TTL, channel) before execution
-                        implementation. Telemetry: London/NY sessions pending.
-NEXT ACTION:            Owner review of Open Decisions -> implement
-                        `execution/` contracts package (dataclasses + schema,
-                        no broker code) -> simulated executor on same
-                        contract -> separate EA task (demo first). Short-
-                        window telemetry (London/NY) parallel pending.
+CURRENT PHASE:          PAPER VALIDATION EVIDENCE + EXECUTION IMPLEMENTATION
+CURRENT MILESTONE:      Execution Engine Final Review — implementation
+                        COMPLETE; 625 tests PASS; ruff/mypy clean (85 files);
+                        EA NOT implemented; production LOCKED
+LAST COMPLETED MILESTONE: Execution Engine Implementation + Final Review —
+                        execution/ package (10 modules) + readiness report
+                        docs/validation/execution/execution-final-readiness.md
+LATEST COMMIT:          (this commit — feat(execution): implement + review)
+TEST STATUS:            625 passed; ruff check/format clean; mypy clean
+                        (85 files)
+BLOCKER:                EA implementation (demo first). Production RiskConfig
+                        not locked. Telemetry: London/NY sessions pending.
+NEXT ACTION:            Implement the EA (MQL5 Expert Advisor) on the
+                        Executor Protocol — demo first (HFM Demo), then
+                        production (HFM Cent XAUUSDc) only after production
+                        RiskConfig locked + owner authorization. No contract
+                        changes required.
                         Production RiskConfig: NOT LOCKED.
 ```
 
@@ -358,3 +353,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 08:47 +07 | Multi-Session Telemetry — strategy switch | DONE (switch) | continuous 22.4 h collector (proc PID 10588/2576) terminated; retained tail window 3 = 441 ASIAN samples (01:39:26–01:46:41 UTC); short-window protocol active (30–60 min, ~1 s, same JSONL schema, append-only, run only while PC available, no background > 2 h) | JSONL do-not-delete rule honored; 2240 total samples, all valid, 0 malformed. Windows remaining: LONDON, LONDON_NY_OVERLAP, NEW_YORK, OFF_HOURS. Next window: LONDON ~14:00–15:30 +07. No commit (per rule: commit only after a new window completes). |
 | 2026-08-17 +07 | Execution Architecture Readiness | COMPLETE (design) | `docs/validation/execution/execution-architecture-readiness.md` (23 sections): TradePlan/ExecutionCommand/ExecutionResult contracts; state machine; idempotency; broker truth; partial fill/SL/ABC-exit; error matrix; retry policy; EA boundary; observability lineage (1:1 canonical events, no schema change); security; executor abstraction; OD-1..OD-12. 476 tests PASS; ruff/mypy clean (74 files) | VERDICT READY WITH OPEN DECISIONS. Design-only: no code, no RiskConfig change, no Obsidian edit (partial-fill conflict 08 vs Order Lifecycle recorded). Bridge telemetry-only. Production RiskConfig UNLOCKED. |
 | 2026-08-17 +07 | Multi-Session XAUUSDc Telemetry — LONDON window | COMPLETE | LONDON n=3594 read-only samples (2026-08-17 09:56:14–10:56:13 UTC, 3600 s @ 1 s); spread min 34 / median 34 / P95 36 / max 36; 0% > 36; validation 0 malformed, 0 missing fields, 0 duplicate timestamps; total now 5834 (ASIAN 2240 + LONDON 3594); report `xauusdc-multi-session-report.md` updated §5b/§6/§7/§8–§16; zero execution | London median 2 pts tighter than Asian (34 vs 36); same 34–36 pt range, no widening; across-session drift NONE. Production RiskConfig UNLOCKED; max_spread 45 / SL 50 NOT locked (overlap/NY/off-hours pending). Remaining: LONDON_NY_OVERLAP ~19:00–22:00 +07, NEW_YORK ~21:00–03:00 +07, OFF_HOURS ~04:00–07:00 +07. |
+| 2026-08-17 +07 | Execution Engine Implementation + Final Review | COMPLETE | `execution/` package (10 modules); 625 tests PASS; ruff check/format clean; mypy clean (85 files); safety scan PASS (no MT5/network/secrets); readiness report `docs/validation/execution/execution-final-readiness.md`; verdict PASS WITH FINDINGS | OD-1..OD-10 implemented; authority boundary clean (execution imports stdlib + own modules only); 13-scenario SimulatedExecutor; 18-code error matrix → 6-class retry policy; SQLite WAL journal (append-only + keyed projection + restart recovery); ReconciliationBoundary (UNKNOWN→broker-truth); EA NOT implemented; production RiskConfig not locked; production LOCKED. No contract/schema changes. No Obsidian edits. |
