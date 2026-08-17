@@ -38,25 +38,40 @@ observation — no trading, no order, no account change.
 
 | Session | Collected | Window (UTC) | Samples |
 | --- | --- | --- | --- |
-| ASIAN | ✅ | 2026-08-17 00:38:12 – 01:11:11 | 1799 |
+| ASIAN | ✅ | 2026-08-17 00:38:12 – 01:46:41 | 2240 |
 | LONDON | ❌ | — | 0 |
 | LONDON/NY OVERLAP | ❌ | — | 0 |
 | NEW_YORK | ❌ | — | 0 |
 | OFF_HOURS | ❌ | — | 0 |
 
 Only the Asian session was observable during the collection windows.
+Collection strategy changed 2026-08-17 08:47 +07: continuous long-run collector
+was terminated; **short-window collection (30–60 min) is now the protocol**
+(session windows run only while the PC is available).
+
+## 5b. Collection Window Record
+
+| Window | Session | Start (UTC) | End (UTC) | Timezone | Samples |
+| --- | --- | --- | --- | --- | --- |
+| 1 | ASIAN | 2026-08-17 00:38:12 | 2026-08-17 00:48:12 | UTC (label: Asia/Jakarta +07) | 600 |
+| 2 | ASIAN | 2026-08-17 00:51:11 | 2026-08-17 01:11:11 | UTC (label: Asia/Jakarta +07) | 1199 |
+| 3 | ASIAN (partial, aborted continuous run) | 2026-08-17 01:39:26 | 2026-08-17 01:46:41 | UTC (label: Asia/Jakarta +07) | 441 |
+
+Window 3 is the retained tail of a 22.4 h continuous run that was terminated
+per the short-window strategy switch; its samples are valid ASIAN evidence
+(schema-identical, 0 malformed) and were kept per the do-not-delete rule.
 
 ## 6. Raw Sample Summary
 
-- Total samples: **1799** (2 collection runs: 600 s + 1200 s @ 1 s).
-- Timestamps: 2026-08-17 00:38:12+00:00 → 01:11:11+00:00 UTC.
+- Total samples: **2240** (3 collection windows: 600 s + 1200 s + 441 s @ 1 s).
+- Timestamps: 2026-08-17 00:38:12+00:00 → 01:46:41+00:00 UTC.
 - Bid range: 4387.42 – 4411.31 · Ask range: 4387.78 – 4411.67.
 - All records `source = HFM_CENT_READ_ONLY`, `symbol = XAUUSDc`.
 - Raw data: `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl`.
 
 ## 7. Per-Session Spread Statistics
 
-### ASIAN (n=1799)
+### ASIAN (n=2240)
 
 | Metric | Points |
 | --- | --- |
@@ -75,9 +90,9 @@ Only the Asian session was observable during the collection windows.
 
 ## 8. Aggregate Spread Distribution
 
-Same as the single observed session (only ASIAN data), n=1799:
+Same as the single observed session (only ASIAN data), n=2240:
 
-- Spread values: 36 pts (52.1 %) and 34 pts (47.9 %); no other values.
+- Spread values: 36 pts (51.7 %) and 34 pts (48.3 %); no other values.
 - Longest continuous run above 34 pts: 74 s; above 36/40/45: 0 s.
 - No outlier bursts, no widening during the ~33-minute combined window.
 
@@ -87,10 +102,10 @@ Given the observed distribution (34–36 pts, mode 34):
 
 | Threshold | Samples ≤ threshold | Acceptance | Rejection | Note |
 | --- | --- | --- | --- | --- |
-| 36 | 600 | 100 % | 0 % | all observed pass |
-| 40 | 600 | 100 % | 0 % | +4 pt headroom |
-| 45 (current) | 600 | 100 % | 0 % | +9–11 pt headroom |
-| 50 | 600 | 100 % | 0 % | +14–16 pt headroom |
+| 36 | 2240 | 100 % | 0 % | all observed pass |
+| 40 | 2240 | 100 % | 0 % | +4 pt headroom |
+| 45 (current) | 2240 | 100 % | 0 % | +9–11 pt headroom |
+| 50 | 2240 | 100 % | 0 % | +14–16 pt headroom |
 
 **45 is neither too restrictive nor too permissive within this data** — all
 samples pass, and it provides 9–11 points of headroom over the observed max.
@@ -119,17 +134,17 @@ session transitions; the data is insufficient to lock 45.
 
 ## 12. Comparison with Existing 61-Sample Evidence
 
-| Metric | Prior (61 samples) | This (1799 samples) |
+| Metric | Prior (61 samples) | This (2240 samples) |
 | --- | --- | --- |
-| Window | 09:35–09:36 +07 (Asian) | 07:38–08:11 +07 (Asian) |
+| Window | 09:35–09:36 +07 (Asian) | 07:38–08:46 +07 (Asian) |
 | min | 34 | 34 |
 | median | 36 | 36 |
 | max | 36 | 36 |
 | above 36 | 0 | 0 |
 | Price area | ~4370 | ~4387–4411 |
 
-Consistent spread behavior across windows within the Asian session: spread is
-stable at 34–36 points, never exceeding 36. The 1799-sample window strengthens
+consistent spread behavior across windows within the Asian session: spread is
+stable at 34–36 points, never exceeding 36. The 2240-sample window strengthens
 the conclusion for the Asian session without proving other sessions.
 
 ## 13. Impact on PAPER_VALIDATION_V0.1
@@ -165,7 +180,7 @@ news/transition sample. **Production RiskConfig remains UNLOCKED.**
 
 ## 16. Verdict
 
-**PARTIAL — MORE SESSION EVIDENCE NEEDED** — 1799 samples of stable Asian
+**PARTIAL — MORE SESSION EVIDENCE NEEDED** — 2240 samples of stable Asian
 spread (34–36 pts, 0 % > 45) were collected; every observed sample passes the
 v0.1 `max_spread_points=45` and clears SL 50 by ≥14 pts. But London/NY/overlap
 and transition windows remain unobserved, so neither 45 nor 50 can be locked
@@ -173,8 +188,11 @@ for production.
 
 ## 17. Next Action
 
-Run the read-only collection script during London and NY windows (e.g. 14:00–16:00
-+07 London; 21:00–03:00 +07 NY/overlap) using the same JSONL schema, merge into
-`xauusdc-spread-timeseries.jsonl`, recompute aggregate distribution, then
-re-evaluate `max_spread_points` and `sl_distance_points` lock-readiness.
-Production RiskConfig stays UNLOCKED until then.
+Short-window protocol (30–60 min, ~1 s interval, same JSONL schema, append):
+run the read-only collector during the next available session window —
+**LONDON ~14:00–15:30 +07 (07:00–08:30 UTC)**, then LONDON/NY overlap
+~19:00–22:00 +07, NY ~21:00–03:00 +07, and OFF_HOURS ~04:00–07:00 +07 if the
+PC is available. After each window: recompute distribution, merge into
+`xauusdc-spread-timeseries.jsonl`, re-evaluate `max_spread_points` and
+`sl_distance_points` lock-readiness. Production RiskConfig stays UNLOCKED
+until then. Do not commit until a new collection window completes.
