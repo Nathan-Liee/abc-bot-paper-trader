@@ -289,7 +289,7 @@ LAST COMPLETED MILESTONE: Paper Validation Harness — `paper_validation/` packa
                         (8 modules, 21 tests, 15 scenario groups, cost model,
                         trade evidence); 476 suite PASS; ruff/mypy clean (74 files);
                         report `docs/validation/paper-trading/paper-validation-report.md`
-LATEST COMMIT:          <pending feat(validation): add paper trading validation harness>
+LATEST COMMIT:          fc9d077 (feat(validation): add paper trading validation harness)
 TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
 BLOCKER:                cost treatment (slippage/commission) unmeasured → critical
                         for production RiskConfig lock; multi-session spread
