@@ -37,8 +37,8 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    PAPER VALIDATION
-CURRENT MILESTONE: Paper Validation Harness — COMPLETE; evidence collected; production config UNLOCKED
+CURRENT PHASE:    PAPER VALIDATION EVIDENCE
+CURRENT MILESTONE: Multi-Session XAUUSDc Telemetry — PARTIAL (Asian session collected, n=1799); London/NY pending; production UNLOCKED
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -85,7 +85,8 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | HFM Cent XAUUSDc Runtime Evidence | ✅ COMPLETE | read-only IPC (`MetaTrader5` python) on account 229105805 / HFMarketsGlobal-Live19, symbol XAUUSDc; 61 spread samples (median 36pts), exact symbol spec/account/margin/leverage; report `docs/validation/runtime/xauusdc-cent-readonly-observation.md`; zero execution | docs-only |
 | Risk Parameter Evaluation | ✅ COMPLETE (approval pending) | decision matrix + SL/spread/exposure/margin sensitivity + 3 profiles in `docs/validation/risk-engine/risk-parameter-evaluation.md`; no config locked | docs-only |
 | Risk Configuration v0.1 (PAPER VALIDATION) | ✅ APPLIED FOR PAPER VALIDATION | `RiskConfig` (profile_name=PAPER_VALIDATION_V0.1, is_production=false, requires_paper_validation=true; risk 0.5% eq, pos 1, DD 5%, SL 50pts, spread 45pts, exposure 100% eq, margin 10% eq+1x budget, leverage 2000, compounding 0%); 23 risk tests; 455 suite PASS; reports `paper-validation-risk-config-v0.1.md` + `risk-config-finalization.md` §PAPER_VALIDATION_V0.1; production config UNLOCKED | `3b096c7` |
-| Paper Validation Harness | ✅ COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md`; all evidence SIMULATED; production RiskConfig UNLOCKED | commit |
+| Paper Validation Harness | ✅ COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md`; all evidence SIMULATED; production RiskConfig UNLOCKED | `fc9d077` |
+| Multi-Session XAUUSDc Telemetry | ⏳ PARTIAL (Asian collected) | 1799 read-only samples (ASIAN session, 2026-08-17 00:38–01:11 UTC); spread stable 34–36 pts, 0% > 45; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl` + report `xauusdc-multi-session-report.md`; London/NY/overlap pending; production UNLOCKED | docs-only |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
 | Execution Engine | ⏳ PENDING | — | — |
@@ -100,27 +101,23 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Paper Validation Harness
-OBJECTIVE:      Build deterministic paper-validation harness to test full
-                trading lifecycle (AI → Risk → Sim Entry → Position →
-                ABC/SL Exit → Evidence) under PAPER_VALIDATION_V0.1. No
-                broker execution; no live orders.
-DO NOT:         Send/modify orders; implement EA; change AI/benchmark/contract/
-                Obsidian/broker; lock production config; optimize profitability.
-EXECUTION STATUS:      COMPLETE — `paper_validation/` package (8 modules:
-                        models, cost_model, market_replay, execution_simulator,
-                        position_simulator, evidence, metrics, scenario_runner).
-                        21 new tests (unit + integration); full suite 476 PASS;
-                        ruff/mypy clean. Report `docs/validation/paper-trading/
-                        paper-validation-report.md`. All evidence SIMULATED.
-                        Production RiskConfig remains UNLOCKED.
-FINDINGS:              SL 50pts economically valid; ABC exit works; risk budget
-                        invariant holds at zero-slippage; cost overrun flagged
-                        (not hidden) under high commission/slippage → cost
-                        treatment is critical pending item.
-NEXT:           Phase A data collection (real MT5 telemetry) → multi-session
-                spread → paper trades with cost variations → revisit v0.1 →
-                lock production RiskConfig → Execution design.
+CURRENT TASK:   Multi-Session XAUUSDc Read-Only Telemetry
+OBJECTIVE:      Collect multi-session market telemetry (HFM Cent REAL, XAUUSDc)
+                read-only to re-evaluate PAPER_VALIDATION_V0.1 before a
+                production RiskConfig lock. Strictly read-only.
+DO NOT:         Trade, order, modify, change account/broker; change RiskConfig/
+                AI/engine/Obsidian; optimize profitability; infer win rate.
+EXECUTION STATUS:      COMPLETE — 1799 read-only samples collected (ASIAN
+                        session only, 2026-08-17 00:38–01:11 UTC, 2 windows).
+                        Spread stable 34–36 pts, 0% > 45. Raw JSONL +
+                        report `docs/validation/runtime/multi-session/`.
+                        Verdict PARTIAL — London/NY/overlap sessions not yet
+                        collected. Production RiskConfig stays UNLOCKED.
+COLLECTION SCRIPT:     temp-only (not committed); read-only IPC, static guard,
+                        JSONL for loops; safe to rerun during other sessions.
+NEXT:           Rerun collection during London/NY/overlap windows -> merge
+                -> recompute -> lock-readiness for max_spread/SL -> Execution
+                design. Production RiskConfig NOT LOCKED.
 ```
 
 ## 6. Completed Work
@@ -282,22 +279,19 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          PAPER VALIDATION
-CURRENT MILESTONE:      Paper Validation Harness — COMPLETE; evidence collected;
-                        production config UNLOCKED
-LAST COMPLETED MILESTONE: Paper Validation Harness — `paper_validation/` package
-                        (8 modules, 21 tests, 15 scenario groups, cost model,
-                        trade evidence); 476 suite PASS; ruff/mypy clean (74 files);
-                        report `docs/validation/paper-trading/paper-validation-report.md`
-LATEST COMMIT:          fc9d077 (feat(validation): add paper trading validation harness)
+CURRENT PHASE:          PAPER VALIDATION EVIDENCE
+CURRENT MILESTONE:      Multi-Session XAUUSDc Telemetry — PARTIAL (ASIAN n=1799
+                        collected; London/NY/overlap pending); production UNLOCKED
+LAST COMPLETED MILESTONE: Multi-Session Telemetry — 1799 read-only samples (ASIAN);
+                        report + raw JSONL under docs/validation/runtime/multi-session/
+LATEST COMMIT:          <pending docs(validation): add multi-session xauusdc telemetry evidence>
 TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
-BLOCKER:                cost treatment (slippage/commission) unmeasured → critical
-                        for production RiskConfig lock; multi-session spread
-                        distribution needed.
-NEXT ACTION:            Phase A data collection (real MT5 telemetry) → multi-session
-                        spread → paper trades with cost variations → revisit v0.1 →
-                        lock production RiskConfig → Execution design.
-                        Production Risk Configuration: NOT LOCKED.
+BLOCKER:                London/NY/overlap session samples not yet collected ->
+                        max_spread 45 and SL 50 cannot be locked for production.
+NEXT ACTION:            Rerun read-only collector during London (14:00-16:00 +07)
+                        and NY/overlap (21:00-03:00 +07) -> merge JSONL ->
+                        recompute aggregation -> lock-readiness evaluation.
+                        Production RiskConfig: NOT LOCKED.
 ```
 
 Read this block first. Then §3–§8. Then the repo.
@@ -339,3 +333,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | Risk Parameter Evaluation | COMPLETE | decision matrix + SL sensitivity + spread/exposure/margin options + 3 profiles; report `docs/validation/risk-engine/risk-parameter-evaluation.md`; 449 tests green | READY FOR HUMAN APPROVAL. Finding: SL 2.0pt invalid (spread 36pt); econ-valid SL 40–72pt needs equity 8,000–14,400 USC for 0.01 lot @ 0.5%; spread candidates 36–50pt accept observed window; leverage observed 2000; cost treatment NEEDS PAPER VALIDATION. No config locked. |
 | 2026-08-17 +07 | Risk Configuration v0.1 (PAPER_VALIDATION) | APPLIED | owner-approved profile applied to `RiskConfig` (equity ratios, SL points, leverage fallback 2000, compounding 0%); exposure/margin now ratio-based; SL-above-observed-spread guard; 23 risk tests; 455 suite green; ruff/mypy clean; reports `paper-validation-risk-config-v0.1.md` + finalization §PAPER_VALIDATION_V0.1 | Profile metadata: is_production=false, requires_paper_validation=true. Production Risk Configuration remains UNLOCKED. Commission/swap = PENDING_PAPER_EVIDENCE. Next: paper validation → revisit → Execution design. |
 | 2026-08-17 +07 | Paper Validation Harness | COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md` | Verdict PASS WITH FINDINGS. All evidence SIMULATED. 15 scenario groups covered. Risk budget invariant holds at zero-slippage; overrun flagged under high costs → cost treatment is critical pending. ABC exit works (NET_PROFIT > 0 → close). SL 50pts valid. Production RiskConfig UNLOCKED. |
+| 2026-08-17 +07 | Multi-Session XAUUSDc Telemetry | PARTIAL | 1799 read-only samples (ASIAN only, 00:38–01:11 UTC); spread stable 34–36 pts, 0% > 45; raw `docs/validation/runtime/multi-session/xauusdc-spread-timeseries.jsonl`; report `xauusdc-multi-session-report.md`; zero execution | Asian evidence consistent with prior 61-sample run. London/NY/overlap NOT collected → max_spread 45 and SL 50 cannot be locked. Production RiskConfig UNLOCKED. |
