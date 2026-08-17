@@ -283,7 +283,7 @@ CURRENT MILESTONE:      Risk Configuration v0.1 (PAPER_VALIDATION_V0.1) — APPL
 LAST COMPLETED MILESTONE: PAPER_VALIDATION_V0.1 — RiskConfig refactor (equity
                         ratios, SL points, guards) + 23 tests; reports
                         `paper-validation-risk-config-v0.1.md` + finalization §v0.1
-LATEST COMMIT:          <pending feat(risk): finalize paper validation configuration>
+LATEST COMMIT:          3b096c7 (feat(risk): finalize paper validation configuration)
 TEST STATUS:            455 passed; ruff check/format clean; mypy clean (65 files)
 BLOCKER:                none for paper; production RiskConfig still needs paper
                         evidence (slippage/commission/full-session spread) before lock.
