@@ -37,8 +37,8 @@ MT5 → MQL5 Read-Only Bridge → JSONL → Collector → Canonical Event → SQ
 ## 3. Current Project Phase
 
 ```
-CURRENT PHASE:    PAPER VALIDATION RISK PROFILE
-CURRENT MILESTONE: Risk Configuration v0.1 (PAPER_VALIDATION_V0.1) — APPLIED FOR PAPER VALIDATION; production UNLOCKED
+CURRENT PHASE:    PAPER VALIDATION
+CURRENT MILESTONE: Paper Validation Harness — COMPLETE; evidence collected; production config UNLOCKED
 ```
 
 Benchmark status (evidence: `docs/validation/ai-benchmark/inventory-report.md`
@@ -84,12 +84,13 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 | Risk Configuration Finalization | ⏳ BLOCKED (evaluation complete) | audit + decision matrix + report `docs/validation/risk-engine/risk-config-finalization.md`; verdict PASS WITH HUMAN APPROVAL REQUIRED; 8 owner decisions pending; no numeric config locked | docs-only |
 | HFM Cent XAUUSDc Runtime Evidence | ✅ COMPLETE | read-only IPC (`MetaTrader5` python) on account 229105805 / HFMarketsGlobal-Live19, symbol XAUUSDc; 61 spread samples (median 36pts), exact symbol spec/account/margin/leverage; report `docs/validation/runtime/xauusdc-cent-readonly-observation.md`; zero execution | docs-only |
 | Risk Parameter Evaluation | ✅ COMPLETE (approval pending) | decision matrix + SL/spread/exposure/margin sensitivity + 3 profiles in `docs/validation/risk-engine/risk-parameter-evaluation.md`; no config locked | docs-only |
-| Risk Configuration v0.1 (PAPER VALIDATION) | ✅ APPLIED FOR PAPER VALIDATION | `RiskConfig` (profile_name=PAPER_VALIDATION_V0.1, is_production=false, requires_paper_validation=true; risk 0.5% eq, pos 1, DD 5%, SL 50pts, spread 45pts, exposure 100% eq, margin 10% eq+1x budget, leverage 2000, compounding 0%); 23 risk tests; 455 suite PASS; reports `paper-validation-risk-config-v0.1.md` + `risk-config-finalization.md` §PAPER_VALIDATION_V0.1; production config UNLOCKED | commit |
+| Risk Configuration v0.1 (PAPER VALIDATION) | ✅ APPLIED FOR PAPER VALIDATION | `RiskConfig` (profile_name=PAPER_VALIDATION_V0.1, is_production=false, requires_paper_validation=true; risk 0.5% eq, pos 1, DD 5%, SL 50pts, spread 45pts, exposure 100% eq, margin 10% eq+1x budget, leverage 2000, compounding 0%); 23 risk tests; 455 suite PASS; reports `paper-validation-risk-config-v0.1.md` + `risk-config-finalization.md` §PAPER_VALIDATION_V0.1; production config UNLOCKED | `3b096c7` |
+| Paper Validation Harness | ✅ COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md`; all evidence SIMULATED; production RiskConfig UNLOCKED | commit |
 | Lot Sizing | ⏳ PENDING | — | — |
 | Exposure Engine | ⏳ PENDING | — | — |
 | Execution Engine | ⏳ PENDING | — | — |
 | Exit Engine | ⏳ PENDING | — | — |
-| Paper Trading | ⏳ PENDING | — | — |
+| Paper Trading | ✅ HARNESS COMPLETE | `paper_validation/` (deterministic simulation, 15 scenario groups, cost model, trade evidence); 476 tests PASS; report `docs/validation/paper-trading/paper-validation-report.md`; verdict PASS WITH FINDINGS; production config UNLOCKED; cost treatment is critical pending | commit |
 | ≥200 Strategy Trades | ⏳ PENDING | — | — |
 | Empirical Analysis | ⏳ PENDING | — | — |
 | Risk/Lot Finalization | ⏳ PENDING | — | — |
@@ -99,23 +100,27 @@ Evidence = commit / passing test / compiled artifact / runtime validation / gene
 ## 5. Current Work
 
 ```
-CURRENT TASK:   Lock Risk Configuration v0.1 for Paper Validation
-OBJECTIVE:      Apply owner-approved config as PAPER_VALIDATION_V0.1 in the
-                Risk Engine for paper validation. PRODUCTION CONFIG IS NOT
-                LOCKED. All params stay configurable via RiskConfig.from_env().
-DO NOT:         Send/modify orders; implement EA; change AI engine/benchmark/
-                contract/Obsidian/broker settings; treat as production final.
-EXECUTION STATUS:      COMPLETE — `RiskConfig` fields + metadata applied
-                        (risk_per_trade 0.005, max pos 1, max DD 0.05, SL 50pts,
-                        max spread 45pts, exposure 100% equity, free margin
-                        10% equity + 1x budget, leverage fallback 2000,
-                        compounding 0.0). Exposure/margin checks now
-                        equity-ratio-based; SL-point/price conversion added;
-                        spread check in points; SL-above-observed-spread guard;
-                        23 tests incl. profile metadata/env/regression.
-VALIDATION:            455 tests PASS; ruff check/format clean; mypy clean (65 files).
-NEXT:           Lot/Exposure/Margin validation (paper) -> Execution design.
-                Revisit v0.1 after paper evidence (see report §Revisit).
+CURRENT TASK:   Paper Validation Harness
+OBJECTIVE:      Build deterministic paper-validation harness to test full
+                trading lifecycle (AI → Risk → Sim Entry → Position →
+                ABC/SL Exit → Evidence) under PAPER_VALIDATION_V0.1. No
+                broker execution; no live orders.
+DO NOT:         Send/modify orders; implement EA; change AI/benchmark/contract/
+                Obsidian/broker; lock production config; optimize profitability.
+EXECUTION STATUS:      COMPLETE — `paper_validation/` package (8 modules:
+                        models, cost_model, market_replay, execution_simulator,
+                        position_simulator, evidence, metrics, scenario_runner).
+                        21 new tests (unit + integration); full suite 476 PASS;
+                        ruff/mypy clean. Report `docs/validation/paper-trading/
+                        paper-validation-report.md`. All evidence SIMULATED.
+                        Production RiskConfig remains UNLOCKED.
+FINDINGS:              SL 50pts economically valid; ABC exit works; risk budget
+                        invariant holds at zero-slippage; cost overrun flagged
+                        (not hidden) under high commission/slippage → cost
+                        treatment is critical pending item.
+NEXT:           Phase A data collection (real MT5 telemetry) → multi-session
+                spread → paper trades with cost variations → revisit v0.1 →
+                lock production RiskConfig → Execution design.
 ```
 
 ## 6. Completed Work
@@ -277,20 +282,21 @@ Every time a task completes, the agent MUST update this document:
 
 ```
 LAST VERIFIED:          2026-08-17 +07:00
-CURRENT PHASE:          PAPER VALIDATION RISK PROFILE
-CURRENT MILESTONE:      Risk Configuration v0.1 (PAPER_VALIDATION_V0.1) — APPLIED
-                        FOR PAPER VALIDATION; production config NOT locked
-LAST COMPLETED MILESTONE: PAPER_VALIDATION_V0.1 — RiskConfig refactor (equity
-                        ratios, SL points, guards) + 23 tests; reports
-                        `paper-validation-risk-config-v0.1.md` + finalization §v0.1
-LATEST COMMIT:          3b096c7 (feat(risk): finalize paper validation configuration)
-TEST STATUS:            455 passed; ruff check/format clean; mypy clean (65 files)
-BLOCKER:                none for paper; production RiskConfig still needs paper
-                        evidence (slippage/commission/full-session spread) before lock.
-NEXT ACTION:            Paper validation under v0.1 -> collect evidence ->
-                        revisit v0.1 -> then Lot/Exposure/Margin validation ->
-                        Execution design. LOCKED (owner): basis EQUITY, risk
-                        0.5%, max positions 1, max DD 5% (profile fields).
+CURRENT PHASE:          PAPER VALIDATION
+CURRENT MILESTONE:      Paper Validation Harness — COMPLETE; evidence collected;
+                        production config UNLOCKED
+LAST COMPLETED MILESTONE: Paper Validation Harness — `paper_validation/` package
+                        (8 modules, 21 tests, 15 scenario groups, cost model,
+                        trade evidence); 476 suite PASS; ruff/mypy clean (74 files);
+                        report `docs/validation/paper-trading/paper-validation-report.md`
+LATEST COMMIT:          <pending feat(validation): add paper trading validation harness>
+TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
+BLOCKER:                cost treatment (slippage/commission) unmeasured → critical
+                        for production RiskConfig lock; multi-session spread
+                        distribution needed.
+NEXT ACTION:            Phase A data collection (real MT5 telemetry) → multi-session
+                        spread → paper trades with cost variations → revisit v0.1 →
+                        lock production RiskConfig → Execution design.
                         Production Risk Configuration: NOT LOCKED.
 ```
 
@@ -332,3 +338,4 @@ Append-only log of important benchmark milestones. Old entries are never rewritt
 | 2026-08-17 +07 | HFM Cent XAUUSDc Read-Only Runtime Discovery | COMPLETE | read-only MT5 IPC (MetaTrader5 5.0.6090), account 229105805 / HFMarketsGlobal-Live19, symbol XAUUSDc; account/symbol/margin captured; 61 spread samples (min 34 / median 36 / max 36 pts); lot/tick/SL mechanics; report `docs/validation/runtime/xauusdc-cent-readonly-observation.md`; zero execution | Owner-locked already: basis EQUITY, risk/trade 0.5%, max positions 1, max drawdown 5%. New evidence for pending: leverage fallback 2000:1, spread ~36 pts (provisional SL 2.0 < spread → econ-invalid), exposure notional ~4370 USC/lot. No config auto-locked. |
 | 2026-08-17 +07 | Risk Parameter Evaluation | COMPLETE | decision matrix + SL sensitivity + spread/exposure/margin options + 3 profiles; report `docs/validation/risk-engine/risk-parameter-evaluation.md`; 449 tests green | READY FOR HUMAN APPROVAL. Finding: SL 2.0pt invalid (spread 36pt); econ-valid SL 40–72pt needs equity 8,000–14,400 USC for 0.01 lot @ 0.5%; spread candidates 36–50pt accept observed window; leverage observed 2000; cost treatment NEEDS PAPER VALIDATION. No config locked. |
 | 2026-08-17 +07 | Risk Configuration v0.1 (PAPER_VALIDATION) | APPLIED | owner-approved profile applied to `RiskConfig` (equity ratios, SL points, leverage fallback 2000, compounding 0%); exposure/margin now ratio-based; SL-above-observed-spread guard; 23 risk tests; 455 suite green; ruff/mypy clean; reports `paper-validation-risk-config-v0.1.md` + finalization §PAPER_VALIDATION_V0.1 | Profile metadata: is_production=false, requires_paper_validation=true. Production Risk Configuration remains UNLOCKED. Commission/swap = PENDING_PAPER_EVIDENCE. Next: paper validation → revisit → Execution design. |
+| 2026-08-17 +07 | Paper Validation Harness | COMPLETE | `paper_validation/` package (8 modules: models, cost_model, market_replay, execution_simulator, position_simulator, evidence, metrics, scenario_runner); 21 new tests (unit + integration); full suite 476 PASS; ruff/mypy clean (74 files); report `docs/validation/paper-trading/paper-validation-report.md` | Verdict PASS WITH FINDINGS. All evidence SIMULATED. 15 scenario groups covered. Risk budget invariant holds at zero-slippage; overrun flagged under high costs → cost treatment is critical pending. ABC exit works (NET_PROFIT > 0 → close). SL 50pts valid. Production RiskConfig UNLOCKED. |
