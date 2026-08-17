@@ -107,8 +107,9 @@ class SymbolSpecification:
     volume_min: float
     volume_max: float
     volume_step: float
-    stops_level: float = 0.0
-    freeze_level: float = 0.0
+    point: float = 0.01  # 1 price point in quote units
+    stops_level: float = 0.0  # in points
+    freeze_level: float = 0.0  # in points
     margin_initial: float = 0.0  # margin per lot if supplied, or 0.0 for leverage-based
 
     def validate(self) -> list[str]:
@@ -120,6 +121,7 @@ class SymbolSpecification:
             ("volume_min", self.volume_min),
             ("volume_max", self.volume_max),
             ("volume_step", self.volume_step),
+            ("point", self.point),
             ("stops_level", self.stops_level),
             ("freeze_level", self.freeze_level),
             ("margin_initial", self.margin_initial),
@@ -137,6 +139,8 @@ class SymbolSpecification:
             errors.append("symbol_spec.tick_size:non_positive")
         if self.tick_value <= 0:
             errors.append("symbol_spec.tick_value:non_positive")
+        if self.point <= 0:
+            errors.append("symbol_spec.point:non_positive")
         if self.volume_min <= 0:
             errors.append("symbol_spec.volume_min:non_positive")
         if self.volume_max < self.volume_min:

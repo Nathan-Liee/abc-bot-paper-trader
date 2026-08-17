@@ -27,9 +27,9 @@ from risk_engine.models import (
 @pytest.fixture
 def mock_account() -> AccountState:
     return AccountState(
-        balance=2000.0,
-        equity=2000.0,
-        free_margin=2000.0,
+        balance=10000.0,
+        equity=10000.0,
+        free_margin=10000.0,
         margin=0.0,
         existing_positions_count=0,
         current_exposure_usd=0.0,
@@ -53,11 +53,11 @@ def mock_market() -> MarketState:
 def mock_spec() -> SymbolSpecification:
     return SymbolSpecification(
         symbol="XAUUSDc",
-        contract_size=100.0,
+        contract_size=1.0,  # Cent mini (matches runtime evidence)
         tick_size=0.01,
         tick_value=1.0,
         volume_min=0.01,
-        volume_max=10.0,
+        volume_max=1000.0,
         volume_step=0.01,
         stops_level=0.50,
     )
@@ -88,12 +88,16 @@ def test_ai_decision_to_risk_gate_pipeline(
 
     ai_engine = DecisionEngine(ai_config, secrets, transport=mock_transport)
 
-    # 2. Setup System Risk Gate
+    # 2. Setup System Risk Gate (PAPER_VALIDATION_V0.1 profile)
     risk_config = RiskConfig(
-        risk_pct_per_trade=1.0,  # 1% of $2000 = $20 budget
-        default_sl_points=2.0,  # $2.00 distance = $200 loss per lot -> 0.10 lot
-        max_spread=1.0,
-        max_exposure_usd=50000.0,
+        risk_per_trade=0.005,  # 0.5% of 10000 -> 50 USC budget
+        sl_distance_points=50.0,  # 50 pts -> loss/lot 5000 -> 0.01 lot
+        max_spread_points=45.0,
+        max_exposure_equity_ratio=1.0,
+        min_free_margin_equity_ratio=0.10,
+        margin_risk_budget_multiplier=1.0,
+        leverage_fallback=2000.0,
+        observed_spread_points=36.0,
     )
     risk_gate = SystemRiskGate(RiskEngine(risk_config))
 
@@ -131,10 +135,10 @@ def test_ai_decision_to_risk_gate_pipeline(
         f"Rejection reason: {decision.reason} ({decision.reason_code})"
     )
     assert decision.direction == "BUY"
-    assert decision.lot == 0.10
-    assert decision.risk_amount == 20.0
-    assert decision.risk_percent == 1.0
-    assert decision.sl == round(mock_market.ask - 2.0, 2)
+    assert decision.lot == 0.01
+    assert decision.risk_amount == 50.0
+    assert decision.risk_percent == 0.5
+    assert decision.sl == round(mock_market.ask - 0.5, 2)
     assert decision.reason_code == ReasonCode.APPROVED.value
 
 

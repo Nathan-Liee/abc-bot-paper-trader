@@ -141,55 +141,63 @@ class RiskEngine:
             )
 
         # 4. Post-calculation validation checks
+        capital_basis = account.equity if self._config.risk_basis == "EQUITY" else account.balance
 
-        # A. Exposure Check
+        # A. Exposure Check (existing + proposed, vs equity ratio)
         total_projected_exposure = account.current_exposure_usd + plan.exposure_usd
-        if total_projected_exposure > self._config.max_exposure_usd:
+        exposure_cap = capital_basis * self._config.max_exposure_equity_ratio
+        if total_projected_exposure > exposure_cap:
             logger.info(
-                "Exposure limit exceeded: projected %s > max %s",
+                "Exposure limit exceeded: projected %s > cap %s",
                 total_projected_exposure,
-                self._config.max_exposure_usd,
+                exposure_cap,
             )
             return RiskEvaluationRecord.reject(
                 reason_code=ReasonCode.EXPOSURE_LIMIT,
                 reason=(
                     f"Projected exposure {total_projected_exposure:.2f} "
-                    f"exceeds limit {self._config.max_exposure_usd:.2f}"
+                    f"exceeds cap {exposure_cap:.2f} "
+                    f"({self._config.max_exposure_equity_ratio}x equity)"
                 ),
                 correlation_id=corr_id,
                 inference_id=inference_id,
                 direction=direction,
                 validation_failures=(
-                    f"exposure.exceeded:{total_projected_exposure}>{self._config.max_exposure_usd}",
+                    f"exposure.exceeded:{total_projected_exposure:.2f}>{exposure_cap:.2f}",
                 ),
             )
 
-        # B. Margin & Free Margin Check
+        # B. Margin & Free Margin Check (equity ratio + next risk budget)
+        required_free_margin = (
+            capital_basis * self._config.min_free_margin_equity_ratio
+            + capital_basis
+            * self._config.risk_per_trade
+            * self._config.margin_risk_budget_multiplier
+        )
         remaining_free_margin = account.free_margin - plan.required_margin_usd
-        if remaining_free_margin < self._config.min_free_margin_usd:
+        if remaining_free_margin < required_free_margin:
             logger.info(
-                "Insufficient margin: remaining free margin %s < min buffer %s",
+                "Insufficient margin: remaining free margin %s < required %s",
                 remaining_free_margin,
-                self._config.min_free_margin_usd,
+                required_free_margin,
             )
             return RiskEvaluationRecord.reject(
                 reason_code=ReasonCode.INSUFFICIENT_MARGIN,
                 reason=(
                     f"Free margin after trade ({remaining_free_margin:.2f}) "
-                    f"below required buffer ({self._config.min_free_margin_usd:.2f})"
+                    f"below required ({required_free_margin:.2f})"
                 ),
                 correlation_id=corr_id,
                 inference_id=inference_id,
                 direction=direction,
                 validation_failures=(
                     f"margin.insufficient:remaining={remaining_free_margin:.2f}<"
-                    f"{self._config.min_free_margin_usd:.2f}",
+                    f"{required_free_margin:.2f}",
                 ),
             )
 
         # C. Risk budget check
-        capital_basis = account.equity if self._config.risk_basis == "EQUITY" else account.balance
-        max_budget = capital_basis * (self._config.risk_pct_per_trade / 100.0)
+        max_budget = capital_basis * self._config.risk_per_trade
         if plan.risk_amount_usd > (max_budget * 1.0001):  # allowance for epsilon
             logger.info("Calculated risk %s exceeds budget %s", plan.risk_amount_usd, max_budget)
             return RiskEvaluationRecord.reject(

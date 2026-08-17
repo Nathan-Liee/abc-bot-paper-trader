@@ -108,15 +108,16 @@ def calculate_trade_plan(
             error="capital_basis_non_positive",
         )
 
-    target_risk_usd = capital_basis * (config.risk_pct_per_trade / 100.0)
+    target_risk_usd = capital_basis * config.risk_per_trade
 
     # 2. Entry price & SL price
+    # config.sl_distance_points / spec.stops_level are in POINTS (1 pt = spec.point).
     entry_price = market.ask if direction == "BUY" else market.bid
-    sl_price, sl_dist_points, sl_err = calculate_sl_price(
+    sl_price, sl_dist_price_out, sl_err = calculate_sl_price(
         direction=direction,
         entry_price=entry_price,
-        sl_points=config.default_sl_points,
-        stops_level_points=spec.stops_level,
+        sl_points=config.sl_distance_points * spec.point,
+        stops_level_points=spec.stops_level * spec.point,
     )
     if sl_err:
         return LotCalculationResult(
@@ -132,17 +133,37 @@ def calculate_trade_plan(
             ok=False,
             error=sl_err,
         )
+    sl_dist_points_out = sl_dist_price_out / spec.point
+
+    # 2b. SL must sit above the observed spread (economic sanity guard).
+    if sl_dist_points_out <= config.observed_spread_points:
+        return LotCalculationResult(
+            candidate_lot=0.0,
+            final_lot=0.0,
+            raw_lot=0.0,
+            sl_price=sl_price,
+            sl_distance_points=sl_dist_points_out,
+            risk_amount_usd=0.0,
+            risk_pct=0.0,
+            exposure_usd=0.0,
+            required_margin_usd=0.0,
+            ok=False,
+            error=(
+                f"sl_distance_not_above_observed_spread:"
+                f"{sl_dist_points_out}<={config.observed_spread_points}"
+            ),
+        )
 
     # 3. Calculate Risk Per Lot (using tick_value and tick_size)
     # Risk per lot = (sl_distance / tick_size) * tick_value
-    loss_per_lot_usd = (sl_dist_points / spec.tick_size) * spec.tick_value
+    loss_per_lot_usd = (sl_dist_points_out / spec.tick_size) * spec.tick_value
     if loss_per_lot_usd <= 0:
         return LotCalculationResult(
             candidate_lot=0.0,
             final_lot=0.0,
             raw_lot=0.0,
             sl_price=sl_price,
-            sl_distance_points=sl_dist_points,
+            sl_distance_points=sl_dist_points_out,
             risk_amount_usd=0.0,
             risk_pct=0.0,
             exposure_usd=0.0,
@@ -163,7 +184,7 @@ def calculate_trade_plan(
             final_lot=0.0,
             raw_lot=raw_lot,
             sl_price=sl_price,
-            sl_distance_points=sl_dist_points,
+            sl_distance_points=sl_dist_points_out,
             risk_amount_usd=0.0,
             risk_pct=0.0,
             exposure_usd=0.0,
@@ -185,14 +206,14 @@ def calculate_trade_plan(
     if spec.margin_initial > 0:
         required_margin_usd = final_lot * spec.margin_initial
     else:
-        required_margin_usd = exposure_usd / config.leverage
+        required_margin_usd = exposure_usd / config.leverage_fallback
 
     return LotCalculationResult(
         candidate_lot=candidate_lot,
         final_lot=final_lot,
         raw_lot=raw_lot,
         sl_price=sl_price,
-        sl_distance_points=sl_dist_points,
+        sl_distance_points=sl_dist_points_out,
         risk_amount_usd=round(actual_risk_usd, 4),
         risk_pct=round(actual_risk_pct, 4),
         exposure_usd=round(exposure_usd, 2),

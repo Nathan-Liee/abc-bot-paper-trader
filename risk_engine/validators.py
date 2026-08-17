@@ -107,28 +107,26 @@ def validate_all_inputs(
             failures,
         )
 
-    # 7. Spread Check
-    if market.spread > config.max_spread:
-        failures.append(f"market.spread:exceeds_max:{market.spread}>{config.max_spread}")
+    # 7. Spread Check (market.spread is in PRICE units; threshold is in POINTS)
+    spread_points = market.spread / spec.point
+    if spread_points > config.max_spread_points:
+        failures.append(f"market.spread:exceeds_max:{spread_points}>{config.max_spread_points}")
         return (
             False,
             ReasonCode.SPREAD_TOO_HIGH,
-            f"Market spread {market.spread} exceeds limit {config.max_spread}",
+            f"Market spread {spread_points} points exceeds limit {config.max_spread_points}",
             failures,
         )
 
     # 8. Drawdown Guard (Circuit Breaker)
-    if account.current_drawdown_pct >= config.max_drawdown_pct:
+    if account.current_drawdown_pct >= config.max_drawdown:
         failures.append(
-            f"account.drawdown:exceeds_max:{account.current_drawdown_pct}%>={config.max_drawdown_pct}%"
+            f"account.drawdown:exceeds_max:{account.current_drawdown_pct}>={config.max_drawdown}"
         )
         return (
             False,
             ReasonCode.DRAWDOWN_LIMIT,
-            (
-                f"Account drawdown {account.current_drawdown_pct}% "
-                f"exceeds max {config.max_drawdown_pct}%"
-            ),
+            (f"Account drawdown {account.current_drawdown_pct} exceeds max {config.max_drawdown}"),
             failures,
         )
 

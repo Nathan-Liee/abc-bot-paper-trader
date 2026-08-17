@@ -1,4 +1,4 @@
-"""Unit tests for Risk Engine calculators, validation rules, and determinism."""
+"""Unit tests for Risk Engine (PAPER_VALIDATION_V0.1 profile)."""
 
 from __future__ import annotations
 
@@ -28,9 +28,9 @@ from risk_engine.models import (
 @pytest.fixture
 def base_account() -> AccountState:
     return AccountState(
-        balance=1000.0,
-        equity=1000.0,
-        free_margin=1000.0,
+        balance=10000.0,
+        equity=10000.0,
+        free_margin=10000.0,
         margin=0.0,
         existing_positions_count=0,
         current_exposure_usd=0.0,
@@ -42,9 +42,9 @@ def base_account() -> AccountState:
 def base_market() -> MarketState:
     now_iso = datetime.now(UTC).isoformat(timespec="seconds")
     return MarketState(
-        bid=2000.0,
+        bid=2000.00,
         ask=2000.20,
-        spread=0.20,
+        spread=0.20,  # 20 points, within 45-pt paper threshold
         mid=2000.10,
         symbol="XAUUSDc",
         timestamp_iso=now_iso,
@@ -55,30 +55,48 @@ def base_market() -> MarketState:
 def base_spec() -> SymbolSpecification:
     return SymbolSpecification(
         symbol="XAUUSDc",
-        contract_size=100.0,  # 100 oz per lot
+        contract_size=1.0,  # Cent mini (matches runtime evidence)
         tick_size=0.01,
-        tick_value=1.0,  # $1 per 0.01 move per lot (100 oz * 0.01 = $1)
+        tick_value=1.0,
         volume_min=0.01,
-        volume_max=10.0,
+        volume_max=1000.0,
         volume_step=0.01,
-        stops_level=0.50,
-        freeze_level=0.0,
+        stops_level=0.5,
+        freeze_level=8.0,
     )
 
 
 @pytest.fixture
 def base_config() -> RiskConfig:
     return RiskConfig(
-        risk_basis="EQUITY",
-        risk_pct_per_trade=1.0,  # $10.00 budget on $1000 equity
-        max_drawdown_pct=10.0,
-        max_exposure_usd=50000.0,
+        risk_per_trade=0.005,
         max_simultaneous_positions=1,
-        max_spread=1.0,
-        max_stale_seconds=10.0,
-        default_sl_points=2.0,  # $2.00 distance = $200 risk per lot
-        min_free_margin_usd=50.0,
+        max_drawdown=0.05,
+        sl_distance_points=50.0,
+        max_spread_points=45.0,
+        max_exposure_equity_ratio=1.0,
+        min_free_margin_equity_ratio=0.10,
+        margin_risk_budget_multiplier=1.0,
+        leverage_fallback=2000.0,
+        compounding_reinvestment_ratio=0.0,
+        observed_spread_points=36.0,
         min_ai_confidence=0.5,
+    )
+
+
+def _buy_proposal(record_id: str = "inf-001", confidence: float = 0.85) -> DecisionRecord:
+    return DecisionRecord(
+        inference_id=record_id,
+        model_id="test-model",
+        provider="test-provider",
+        request_ts="2026-08-17T00:00:00Z",
+        latency_ms=100.0,
+        context_snapshot_id=None,
+        prompt_version="1.0.0",
+        direction="BUY",
+        confidence=confidence,
+        reason="Upward momentum",
+        validation_ok=True,
     )
 
 
@@ -91,23 +109,55 @@ def test_round_down_step() -> None:
 
 
 def test_sl_calculation_buy_sell() -> None:
-    # BUY: entry 2000.20, sl_dist 2.0 -> sl 1998.20
     sl_price, dist, err = calculate_sl_price("BUY", 2000.20, 2.0, stops_level_points=0.5)
     assert err is None
     assert sl_price == 2000.20 - 2.0
     assert dist == 2.0
 
-    # SELL: entry 2000.00, sl_dist 2.0 -> sl 2002.00
     sl_price, dist, err = calculate_sl_price("SELL", 2000.00, 2.0, stops_level_points=0.5)
     assert err is None
     assert sl_price == 2000.00 + 2.0
     assert dist == 2.0
 
-    # Stops level clamp: sl_points 0.2 < stops_level 0.5 -> effective dist 0.5
     sl_price, dist, err = calculate_sl_price("BUY", 2000.20, 0.2, stops_level_points=0.5)
     assert err is None
     assert dist == 0.5
     assert sl_price == 2000.20 - 0.5
+
+
+def test_config_paper_profile_metadata() -> None:
+    cfg = RiskConfig()
+    assert cfg.profile_name == "PAPER_VALIDATION_V0.1"
+    assert cfg.is_production is False
+    assert cfg.requires_paper_validation is True
+    assert cfg.risk_basis == "EQUITY"
+    assert cfg.risk_per_trade == 0.005  # 0.5 %
+    assert cfg.max_simultaneous_positions == 1
+    assert cfg.max_drawdown == 0.05  # 5 %
+    assert cfg.sl_distance_points == 50.0
+    assert cfg.max_spread_points == 45.0
+    assert cfg.max_exposure_equity_ratio == 1.0
+    assert cfg.min_free_margin_equity_ratio == 0.10
+    assert cfg.margin_risk_budget_multiplier == 1.0
+    assert cfg.leverage_fallback == 2000.0
+    assert cfg.compounding_reinvestment_ratio == 0.0  # no auto compounding
+    assert cfg.validate() == []
+
+
+def test_config_env_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ABC_SL_DISTANCE_POINTS", "60")
+    monkeypatch.setenv("ABC_MAX_SPREAD_POINTS", "50")
+    monkeypatch.setenv("ABC_RISK_PER_TRADE", "0.01")
+    cfg = RiskConfig.from_env()
+    assert cfg.sl_distance_points == 60.0
+    assert cfg.max_spread_points == 50.0
+    assert cfg.risk_per_trade == 0.01
+
+
+def test_config_sl_below_observed_spread_invalid() -> None:
+    cfg = RiskConfig(sl_distance_points=30.0)  # 30 < 36 observed
+    errors = cfg.validate()
+    assert any("below_observed_spread" in e for e in errors)
 
 
 def test_trade_plan_calculation(
@@ -116,17 +166,15 @@ def test_trade_plan_calculation(
     base_spec: SymbolSpecification,
     base_config: RiskConfig,
 ) -> None:
-    # Equity $1000, 1% risk = $10.00 budget
-    # SL distance $2.00 -> Loss per lot = (2.0 / 0.01) * 1.0 = $200.00 per lot
-    # Raw lot = 10.00 / 200.00 = 0.05 lot
+    # Equity 10000, 0.5% risk = 50 budget; SL 50 pts -> loss/lot 5000 -> lot 0.01
     plan = calculate_trade_plan("BUY", base_account, base_market, base_spec, base_config)
     assert plan.ok is True
-    assert plan.candidate_lot == 0.05
-    assert plan.final_lot == 0.05
-    assert plan.risk_amount_usd == 10.0
-    assert plan.risk_pct == 1.0
-    assert plan.sl_price == round(base_market.ask - 2.0, 2)
-    assert plan.exposure_usd == round(0.05 * 100.0 * base_market.ask, 2)
+    assert plan.candidate_lot == 0.01
+    assert plan.final_lot == 0.01
+    assert plan.risk_amount_usd == 50.0
+    assert plan.risk_pct == 0.5
+    assert plan.sl_price == round(base_market.ask - 0.50, 2)
+    assert plan.exposure_usd == round(0.01 * 1.0 * base_market.ask, 2)
 
 
 def test_risk_engine_approve_buy(
@@ -136,24 +184,13 @@ def test_risk_engine_approve_buy(
     base_config: RiskConfig,
 ) -> None:
     engine = RiskEngine(base_config)
-    proposal = DecisionRecord(
-        inference_id="inf-001",
-        model_id="test-model",
-        provider="test-provider",
-        request_ts="2026-08-17T00:00:00Z",
-        latency_ms=100.0,
-        context_snapshot_id=None,
-        prompt_version="1.0.0",
-        direction="BUY",
-        confidence=0.85,
-        reason="Upward momentum",
-        validation_ok=True,
-    )
-    record = engine.evaluate(proposal, base_account, base_market, base_spec)
+    record = engine.evaluate(_buy_proposal(), base_account, base_market, base_spec)
     assert record.decision == "APPROVE"
     assert record.direction == "BUY"
-    assert record.lot == 0.05
-    assert record.risk_amount == 10.0
+    assert record.lot == 0.01
+    assert record.risk_amount == 50.0
+    assert record.risk_percent == 0.5
+    assert record.sl == round(base_market.ask - 0.50, 2)
     assert record.reason_code == ReasonCode.APPROVED.value
 
 
@@ -164,12 +201,13 @@ def test_risk_engine_approve_sell(
     base_config: RiskConfig,
 ) -> None:
     engine = RiskEngine(base_config)
+    proposal = _buy_proposal("inf-002", 0.90)
     proposal = DecisionRecord(
-        inference_id="inf-002",
-        model_id="test-model",
-        provider="test-provider",
-        request_ts="2026-08-17T00:00:00Z",
-        latency_ms=100.0,
+        inference_id=proposal.inference_id,
+        model_id=proposal.model_id,
+        provider=proposal.provider,
+        request_ts=proposal.request_ts,
+        latency_ms=proposal.latency_ms,
         context_snapshot_id=None,
         prompt_version="1.0.0",
         direction="SELL",
@@ -180,8 +218,8 @@ def test_risk_engine_approve_sell(
     record = engine.evaluate(proposal, base_account, base_market, base_spec)
     assert record.decision == "APPROVE"
     assert record.direction == "SELL"
-    assert record.lot == 0.05
-    assert record.sl == round(base_market.bid + 2.0, 2)
+    assert record.lot == 0.01
+    assert record.sl == round(base_market.bid + 0.50, 2)
     assert record.reason_code == ReasonCode.APPROVED.value
 
 
@@ -192,12 +230,13 @@ def test_risk_engine_ai_no_trade(
     base_config: RiskConfig,
 ) -> None:
     engine = RiskEngine(base_config)
+    proposal = _buy_proposal("inf-003", 0.95)
     proposal = DecisionRecord(
-        inference_id="inf-003",
-        model_id="test-model",
-        provider="test-provider",
-        request_ts="2026-08-17T00:00:00Z",
-        latency_ms=100.0,
+        inference_id=proposal.inference_id,
+        model_id=proposal.model_id,
+        provider=proposal.provider,
+        request_ts=proposal.request_ts,
+        latency_ms=proposal.latency_ms,
         context_snapshot_id=None,
         prompt_version="1.0.0",
         direction="NO-TRADE",
@@ -244,7 +283,7 @@ def test_risk_engine_spread_too_high(
     engine = RiskEngine(base_config)
     bad_market = MarketState(
         bid=2000.0,
-        ask=2006.0,  # spread 6.0 > max 1.0
+        ask=2006.0,  # spread 6.0 = 600 points > 45-pt threshold
         spread=6.0,
         mid=2003.0,
         symbol="XAUUSDc",
@@ -283,13 +322,13 @@ def test_risk_engine_drawdown_limit_exceeded(
 ) -> None:
     engine = RiskEngine(base_config)
     dd_account = AccountState(
-        balance=1000.0,
-        equity=850.0,
-        free_margin=850.0,
+        balance=10000.0,
+        equity=8500.0,
+        free_margin=8500.0,
         margin=0.0,
         existing_positions_count=0,
         current_exposure_usd=0.0,
-        current_drawdown_pct=15.0,  # 15% >= max 10%
+        current_drawdown_pct=0.15,  # 15 % >= 5 % threshold
     )
     proposal = {"direction": "BUY", "confidence": 0.8, "validation_ok": True}
     record = engine.evaluate(proposal, dd_account, base_market, base_spec)
@@ -297,31 +336,34 @@ def test_risk_engine_drawdown_limit_exceeded(
     assert record.reason_code == ReasonCode.DRAWDOWN_LIMIT.value
 
 
-def test_risk_engine_exposure_limit_exceeded(
-    base_account: AccountState, base_market: MarketState, base_spec: SymbolSpecification
+def test_risk_engine_exposure_limit_includes_existing(
+    base_market: MarketState, base_spec: SymbolSpecification, base_config: RiskConfig
 ) -> None:
-    tiny_exposure_config = RiskConfig(
-        max_exposure_usd=1000.0,  # max $1000 exposure
-        risk_pct_per_trade=1.0,
-        max_spread=1.0,
+    engine = RiskEngine(base_config)
+    existing_exposure_account = AccountState(
+        balance=10000.0,
+        equity=10000.0,
+        free_margin=10000.0,
+        margin=0.0,
+        existing_positions_count=0,
+        current_exposure_usd=9990.0,  # 9990 + 20.002 > 10000 (1.0x equity) -> reject
+        current_drawdown_pct=0.0,
     )
-    engine = RiskEngine(tiny_exposure_config)
     proposal = {"direction": "BUY", "confidence": 0.8, "validation_ok": True}
-    # BUY 0.05 lot @ 2000 ask = 0.05 * 100 * 2000 = $10,000 exposure > $1000
-    record = engine.evaluate(proposal, base_account, base_market, base_spec)
+    record = engine.evaluate(proposal, existing_exposure_account, base_market, base_spec)
     assert record.decision == "REJECT"
     assert record.reason_code == ReasonCode.EXPOSURE_LIMIT.value
 
 
-def test_risk_engine_insufficient_margin(
+def test_risk_engine_insufficient_margin_ratio(
     base_market: MarketState, base_spec: SymbolSpecification, base_config: RiskConfig
 ) -> None:
     engine = RiskEngine(base_config)
     tight_margin_account = AccountState(
-        balance=1000.0,
-        equity=1000.0,
-        free_margin=60.0,  # 60 - required_margin (100) = -40 < min_buffer (50)
-        margin=940.0,
+        balance=10000.0,
+        equity=10000.0,
+        free_margin=1050.0,  # after required margin < 1050 (10% equity + 1x budget)
+        margin=0.0,
         existing_positions_count=0,
     )
     proposal = {"direction": "BUY", "confidence": 0.8, "validation_ok": True}
@@ -330,11 +372,68 @@ def test_risk_engine_insufficient_margin(
     assert record.reason_code == ReasonCode.INSUFFICIENT_MARGIN.value
 
 
+def test_risk_engine_positions_cap(
+    base_market: MarketState, base_spec: SymbolSpecification, base_config: RiskConfig
+) -> None:
+    engine = RiskEngine(base_config)
+    one_position_account = AccountState(
+        balance=10000.0,
+        equity=10000.0,
+        free_margin=10000.0,
+        margin=0.0,
+        existing_positions_count=1,  # max_simultaneous_positions = 1 -> reject
+        current_exposure_usd=0.0,
+        current_drawdown_pct=0.0,
+    )
+    proposal = {"direction": "BUY", "confidence": 0.8, "validation_ok": True}
+    record = engine.evaluate(proposal, one_position_account, base_market, base_spec)
+    assert record.decision == "REJECT"
+    assert record.reason_code == ReasonCode.EXPOSURE_LIMIT.value
+
+
+def test_risk_engine_sl_below_observed_spread_config_invalid(
+    base_account: AccountState,
+    base_market: MarketState,
+    base_spec: SymbolSpecification,
+) -> None:
+    bad_config = RiskConfig(
+        sl_distance_points=30.0,  # 30 < observed spread 36 -> invalid config
+        observed_spread_points=36.0,
+        max_spread_points=45.0,
+        risk_per_trade=0.005,
+        max_drawdown=0.05,
+    )
+    engine = RiskEngine(bad_config)
+    proposal = {"direction": "BUY", "confidence": 0.8, "validation_ok": True}
+    record = engine.evaluate(proposal, base_account, base_market, base_spec)
+    assert record.decision == "REJECT"
+    # config.validate() fails first (fail-closed) -> UNKNOWN_RISK_INPUT
+    assert record.reason_code == ReasonCode.UNKNOWN_RISK_INPUT.value
+
+
+def test_trade_plan_sl_guard_below_observed_spread(
+    base_account: AccountState,
+    base_market: MarketState,
+    base_spec: SymbolSpecification,
+) -> None:
+    bad_config = RiskConfig(
+        sl_distance_points=30.0,
+        observed_spread_points=36.0,
+        max_spread_points=45.0,
+        risk_per_trade=0.005,
+        max_drawdown=0.05,
+    )
+    # Direct calculator path (bypasses config.validate()) -> plan guard fires.
+    plan = calculate_trade_plan("BUY", base_account, base_market, base_spec, bad_config)
+    assert plan.ok is False
+    assert plan.error is not None
+    assert "sl_distance_not_above_observed_spread" in plan.error
+
+
 def test_risk_engine_lot_below_min(
     base_market: MarketState, base_spec: SymbolSpecification, base_config: RiskConfig
 ) -> None:
     engine = RiskEngine(base_config)
-    # Tiny equity $10.00 -> 1% risk = $0.10 -> raw lot = 0.10 / 200 = 0.0005 < 0.01 min
     micro_account = AccountState(
         balance=10.0,
         equity=10.0,
@@ -368,6 +467,18 @@ def test_risk_engine_nan_infinite_safety(
     assert record.reason_code == ReasonCode.INVALID_MARKET_CONTEXT.value
 
 
+def test_risk_engine_rounding_never_exceeds_budget(
+    base_account: AccountState,
+    base_market: MarketState,
+    base_spec: SymbolSpecification,
+    base_config: RiskConfig,
+) -> None:
+    plan = calculate_trade_plan("BUY", base_account, base_market, base_spec, base_config)
+    assert plan.ok is True
+    budget = base_account.equity * base_config.risk_per_trade
+    assert plan.risk_amount_usd <= budget * 1.0001
+
+
 def test_risk_engine_determinism(
     base_account: AccountState,
     base_market: MarketState,
@@ -392,25 +503,13 @@ def test_system_risk_gate_interface(
     base_config: RiskConfig,
 ) -> None:
     gate = SystemRiskGate(RiskEngine(base_config))
-    proposal = DecisionRecord(
-        inference_id="inf-gate-01",
-        model_id="model",
-        provider="provider",
-        request_ts="2026-08-17T00:00:00Z",
-        latency_ms=10.0,
-        context_snapshot_id=None,
-        prompt_version="1.0.0",
-        direction="BUY",
-        confidence=0.9,
-        reason="Valid signal",
-        validation_ok=True,
-    )
+    proposal = _buy_proposal("inf-gate-01", 0.9)
     decision = gate.evaluate_proposal(proposal, base_account, base_market, base_spec)
     assert isinstance(decision, RiskDecision)
     assert decision.decision == "APPROVE"
     assert decision.direction == "BUY"
-    assert decision.lot == 0.05
-    assert decision.risk_amount == 10.0
+    assert decision.lot == 0.01
+    assert decision.risk_amount == 50.0
 
     audit_rec = gate.evaluate_audit(proposal, base_account, base_market, base_spec)
     assert isinstance(audit_rec, RiskEvaluationRecord)

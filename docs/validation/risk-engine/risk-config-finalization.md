@@ -329,3 +329,22 @@ Blocked on the 8 human decisions above. Once approved: update
 commit `feat(risk): finalize risk configuration` → push → unlock the
 Lot/Execution design using the confirmed config. Until then, keep the repo at
 PROVISIONAL mode with the current 449-green baseline.
+## PAPER_VALIDATION_V0.1
+
+**Added 2026-08-17.** Owner-approved values applied for paper validation only;
+production configuration remains UNLOCKED. Full details in
+`docs/validation/risk-engine/paper-validation-risk-config-v0.1.md`.
+
+Parameters:
+
+` RISK_PER_TRADE = 0.005 (0.5% equity) ` SL = 50 pts ` MAX_SPREAD = 45 pts
+` EXPOSURE = 100% equity ` FREE MARGIN >= 10% equity + 1x risk budget
+` LEVERAGE FALLBACK = 2000 ` COMPOUNDING = 0% ` BASIS = EQUITY
+` MAX POSITIONS = 1 ` MAX DRAWDOWN = 5% `
+
+Rationale: values follow the runtime evidence (spread median 36 pts, SL 50 > 36,
+leverage 2000) and the owner-approved Locked policy. Known limitations: SL/max
+spread are starting choices for validation, not final economics; slippage and
+commission remain PENDING_PAPER_EVIDENCE; spread sampled for one 61-s window
+only. Non-production warning: the profile is marked `is_production=false` /
+`requires_paper_validation=true` and is revisitable via `from_env()`.
