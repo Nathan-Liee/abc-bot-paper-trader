@@ -284,7 +284,7 @@ CURRENT MILESTONE:      Multi-Session XAUUSDc Telemetry — PARTIAL (ASIAN n=179
                         collected; London/NY/overlap pending); production UNLOCKED
 LAST COMPLETED MILESTONE: Multi-Session Telemetry — 1799 read-only samples (ASIAN);
                         report + raw JSONL under docs/validation/runtime/multi-session/
-LATEST COMMIT:          <pending docs(validation): add multi-session xauusdc telemetry evidence>
+LATEST COMMIT:          4da6958 (docs(validation): add multi-session xauusdc telemetry evidence)
 TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
 BLOCKER:                London/NY/overlap session samples not yet collected ->
                         max_spread 45 and SL 50 cannot be locked for production.
