@@ -301,7 +301,7 @@ CURRENT MILESTONE:      Execution Architecture Readiness — design COMPLETE,
 LAST COMPLETED MILESTONE: Execution Architecture Design — contracts + state
                         machine + EA boundary report
                         docs/validation/execution/execution-architecture-readiness.md
-LATEST COMMIT:          <pending docs(validation): define execution architecture readiness>
+LATEST COMMIT:          d21b412 (docs(validation): define execution architecture readiness)
 TEST STATUS:            476 passed; ruff check/format clean; mypy clean (74 files)
 BLOCKER:                Owner decisions OD-1..OD-10 (partial fill confirm,
                         entry type/requote, profit threshold, retry budgets,
